@@ -1,22 +1,24 @@
-object FormSimpleCamera: TFormSimpleCamera
+object Form1: TForm1
   Left = 0
   Top = 0
-  Caption = 'Arrows 3D - Delphi  FireMonkey '
-  ClientHeight = 480
-  ClientWidth = 640
+  Caption = 'WAD2 Remapper'
+  ClientHeight = 538
+  ClientWidth = 944
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
-  Touch.GestureManager = GestureManager1
+  OnCreate = FormCreate
+  OnClose = FormClose
+  OnShow = FormShow
   Touch.InteractiveGestures = [Zoom]
-  OnGesture = FormGesture
   DesignerMasterStyle = 0
   object Viewport3DMain: TViewport3D
-    Align = Client
+    Align = FitRight
     Camera = CameraZ
     Color = claBlack
+    Position.X = 304.000000000000000000
     Size.Width = 640.000000000000000000
-    Size.Height = 480.000000000000000000
+    Size.Height = 538.000000000000000000
     Size.PlatformDefault = False
     UsingDesignCamera = False
     OnMouseDown = Viewport3DMainMouseDown
@@ -29,11 +31,13 @@ object FormSimpleCamera: TFormSimpleCamera
       Width = 1.000000000000000000
       Height = 1.000000000000000000
       Depth = 1.000000000000000000
+      OnRender = DummySceneRender
       object CylX: TCylinder
         RotationAngle.Z = 270.000000000000000000
         Width = 0.100000001490116100
         Height = 4.000000000000000000
         Depth = 0.100000001490116100
+        HitTest = False
         SubdivisionsCap = 2
         MaterialSource = MaterialSourceX
         Quanternion = '(0,0,-0.707106828689575,0.707106709480286)'
@@ -52,6 +56,7 @@ object FormSimpleCamera: TFormSimpleCamera
         Width = 0.100000001490116100
         Height = 4.000000000000000000
         Depth = 0.100000001490116100
+        HitTest = False
         SubdivisionsCap = 2
         MaterialSource = MaterialSourceY
         object ConeY: TCone
@@ -70,6 +75,7 @@ object FormSimpleCamera: TFormSimpleCamera
         Width = 0.100000001490116100
         Height = 4.000000000000000000
         Depth = 0.100000001490116100
+        HitTest = False
         SubdivisionsCap = 2
         MaterialSource = MaterialSourceZ
         Quanternion = '(0.70710676908493,0,0,0.70710676908493)'
@@ -83,6 +89,14 @@ object FormSimpleCamera: TFormSimpleCamera
           MaterialSource = MaterialSourceZ
           Quanternion = '(1,0,0,-4.37113882867379E-8)'
         end
+      end
+      object Mesh1: TMesh
+        WrapMode = Original
+        Width = 1.000000000000000000
+        Height = 1.000000000000000000
+        Depth = 1.000000000000000000
+        HitTest = False
+        MaterialSource = LightMaterialSource1
       end
     end
     object DummyXY: TDummy
@@ -104,6 +118,22 @@ object FormSimpleCamera: TFormSimpleCamera
           Depth = 1.000000000000000000
         end
       end
+      object Light1: TLight
+        Color = claWhite
+        LightType = Directional
+        SpotCutOff = 180.000000000000000000
+        Position.X = 6.741592407226563000
+        Position.Y = -3.592830181121826000
+        RotationAngle.X = 339.850830078125000000
+        RotationAngle.Y = 2.553468227386475000
+        RotationAngle.Z = 313.012969970703100000
+        Width = 1.000000000000000000
+        Height = 1.000000000000000000
+        Depth = 1.000000000000000000
+        Quanternion = 
+          '(-0.170102044939995,-0.502299249172211,-0.312710464000702,0.7880' +
+          '19061088562)'
+      end
     end
     object MaterialSourceY: TLightMaterialSource
       Diffuse = claGreen
@@ -111,8 +141,8 @@ object FormSimpleCamera: TFormSimpleCamera
       Emissive = claNull
       Specular = xFF606060
       Shininess = 30
-      Left = 64
-      Top = 184
+      Left = 88
+      Top = 400
     end
     object MaterialSourceZ: TLightMaterialSource
       Diffuse = claBlue
@@ -120,8 +150,8 @@ object FormSimpleCamera: TFormSimpleCamera
       Emissive = claNull
       Specular = xFF606060
       Shininess = 30
-      Left = 64
-      Top = 248
+      Left = 24
+      Top = 408
     end
     object MaterialSourceX: TLightMaterialSource
       Diffuse = claRed
@@ -129,13 +159,113 @@ object FormSimpleCamera: TFormSimpleCamera
       Emissive = claNull
       Specular = xFF606060
       Shininess = 30
-      Left = 56
-      Top = 112
+      Left = 24
+      Top = 360
+    end
+    object LightMaterialSource1: TLightMaterialSource
+      Diffuse = claSilver
+      Ambient = xFF202020
+      Emissive = claNull
+      Specular = xFF606060
+      Shininess = 30
+      Left = 200
+      Top = 416
     end
   end
-  object GestureManager1: TGestureManager
-    Sensitivity = 80.000000000000000000
-    Left = 64
-    Top = 64
+  object StatusBar1: TStatusBar
+    Position.Y = 516.000000000000000000
+    ShowSizeGrip = True
+    Size.Width = 944.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 4
+  end
+  object Button1: TButton
+    Position.X = 80.000000000000000000
+    Position.Y = 336.000000000000000000
+    Size.Width = 113.000000000000000000
+    Size.Height = 41.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 5
+    Text = 'Reset Camera'
+    OnClick = Button1Click
+  end
+  object MenuBar1: TMenuBar
+    Size.Width = 944.000000000000000000
+    Size.Height = 24.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 7
+    object MenuItem1: TMenuItem
+      Text = '&File'
+      object Open: TMenuItem
+        Locked = True
+        Text = 'Open...'
+        OnClick = OpenClick
+      end
+      object SaveAs: TMenuItem
+        Locked = True
+        Text = 'Save As...'
+      end
+      object Quit: TMenuItem
+        Action = FileExit1
+        Enabled = True
+        Locked = True
+        ImageIndex = 43
+      end
+    end
+  end
+  object OpenDialog1: TOpenDialog
+    DefaultExt = '.wad2'
+    Filter = 'WadTool Files (*.wad2)|*.wad2|All Files (*.*)|*.*'
+    Options = [ofHideReadOnly, ofFileMustExist, ofEnableSizing]
+    Left = 144
+    Top = 480
+  end
+  object TreeView1: TTreeView
+    Position.X = 8.000000000000000000
+    Position.Y = 32.000000000000000000
+    Size.Width = 233.000000000000000000
+    Size.Height = 233.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 13
+    Viewport.Width = 229.000000000000000000
+    Viewport.Height = 229.000000000000000000
+    object TreeViewItem1: TTreeViewItem
+      IsChecked = False
+      IsExpanded = False
+      IsSelected = False
+      TabOrder = 0
+      Text = 'TreeViewItem1'
+      object TreeViewItem2: TTreeViewItem
+        IsChecked = False
+        IsExpanded = False
+        IsSelected = False
+        TabOrder = 0
+        Text = 'TreeViewItem2'
+      end
+      object TreeViewItem3: TTreeViewItem
+        IsChecked = False
+        IsExpanded = False
+        IsSelected = False
+        TabOrder = 1
+        Text = 'TreeViewItem3'
+      end
+    end
+  end
+  object ActionList1: TActionList
+    Left = 80
+    Top = 480
+    object FileExit1: TFileExit
+      Category = 'File'
+      Hint = 'Quit|Quits the application'
+      ImageIndex = 43
+      ShortCut = 27
+      ImageIndex = 43
+    end
+  end
+  object ColorMaterialSource1: TColorMaterialSource
+    Color = claAqua
+    Left = 144
+    Top = 280
   end
 end

@@ -138,7 +138,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="MainForm.pas">
-            <Form>FormSimpleCamera</Form>
+            <Form>Form1</Form>
             <FormType>fmx</FormType>
         </DCCReference>
         <DCCReference Include="LEB128.pas"/>

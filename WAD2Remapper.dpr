@@ -3,7 +3,7 @@ program WAD2Remapper;
 uses
   System.StartUpCopy,
   FMX.Forms,
-  MainForm in 'MainForm.pas' {FormSimpleCamera},
+  MainForm in 'MainForm.pas' {Form1},
   LEB128 in 'LEB128.pas',
   Wad2 in 'Wad2.pas';
 
@@ -11,6 +11,6 @@ uses
 
 begin
   Application.Initialize;
-  Application.CreateForm(TFormSimpleCamera, FormSimpleCamera);
+  Application.CreateForm(TForm1, Form1);
   Application.Run;
 end.
