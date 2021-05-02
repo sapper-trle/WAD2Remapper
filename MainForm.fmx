@@ -15,7 +15,7 @@ object Form1: TForm1
   object Viewport3DMain: TViewport3D
     Align = FitRight
     Camera = CameraZ
-    Color = claBlack
+    Color = claTeal
     Position.X = 304.000000000000000000
     Size.Width = 640.000000000000000000
     Size.Height = 538.000000000000000000
@@ -91,7 +91,6 @@ object Form1: TForm1
         end
       end
       object Mesh1: TMesh
-        WrapMode = Original
         Width = 1.000000000000000000
         Height = 1.000000000000000000
         Depth = 1.000000000000000000
@@ -252,6 +251,16 @@ object Form1: TForm1
       end
     end
   end
+  object ColorMaterialSource1: TColorMaterialSource
+    Color = claAqua
+    Left = 144
+    Top = 280
+  end
+  object ColorMaterialSource2: TColorMaterialSource
+    Color = claBlack
+    Left = 240
+    Top = 344
+  end
   object ActionList1: TActionList
     Left = 80
     Top = 480
@@ -262,10 +271,5 @@ object Form1: TForm1
       ShortCut = 27
       ImageIndex = 43
     end
-  end
-  object ColorMaterialSource1: TColorMaterialSource
-    Color = claAqua
-    Left = 144
-    Top = 280
   end
 end

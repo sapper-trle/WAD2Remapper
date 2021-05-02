@@ -2,7 +2,10 @@ unit Wad2;
 
 interface
 
-uses System.Classes, System.Generics.Collections, System.Math.Vectors, FMX.Types3D, FMX.Objects3D;
+uses System.Classes, System.Generics.Collections, System.Math.Vectors,
+  FMX.Types3D, FMX.Objects3D,
+  FMX.Controls3D,
+  FMX.MaterialSources;
 
 type
   TPoly = record
@@ -14,6 +17,7 @@ type
     normals : TList<TPoint3D>;
     quads : TList<TPoly>;
     tris  : TList<TPoly>;
+    name : string;
   end;
 
   TMoveable = record
@@ -31,6 +35,7 @@ type
 function LoadWad2(const stream:TMemoryStream; var w :TWAD2):Boolean;
 function ConvertMesh(const msh : TWadMesh) : TMesh;
 function ConvertMesh2(const msh : TWadMesh) : TMeshData;
+procedure CreatePoints(const msh:TWadMesh; ctrl:TControl3D; mat1,mat2:TMaterialSource);
 procedure FreeWad(var w : TWAD2);
 
 implementation
@@ -97,6 +102,7 @@ begin
               msh.normals := TList<TPoint3D>.Create;
               msh.quads := TList<TPoly>.Create;
               msh.tris := TList<TPoly>.Create;
+              msh.name := 'Mesh';
               while True do
               begin
                 chunksize4 := LEB128.ReadInt(br);
@@ -104,6 +110,11 @@ begin
                 ss := GetChunkId(br, chunkSize4);
                 chunkSize4 := LEB128.ReadInt(br);
                 chunkStart4 := stream.Position;
+                if (ss = 'W2MeshName') then
+                begin
+                  msh.name := GetChunkId(br, chunkSize4);
+                end
+                else
                 if (ss = 'W2VrtPos') or (ss = 'W2VrtNorm') or (ss = 'W2Polys') then
                 begin
                   while True do
@@ -307,6 +318,36 @@ begin
     Result.IndexBuffer[i+6] := t.p4;
     Result.IndexBuffer[i+7] := t.p1;
     Inc(i, 8);
+  end;
+end;
+
+procedure CreatePoints(const msh:TWadMesh; ctrl:TControl3D; mat1, mat2:TMaterialSource);
+const
+  max = 127;
+var
+  v : TPoint3D;
+  scale, size : Single;
+  s : TSphere;
+  i, limit : Integer;
+begin
+  scale := 0.005;
+  size := 0.03;
+  limit := (msh.verts.Count mod 256) - 1;
+  if limit > max then limit := max;
+  i := 0;
+  for v in msh.verts do
+  begin
+    s := TSphere.Create(ctrl);
+    s.TagString := IntToStr(i);
+    s.HitTest := True;
+    s.SetSize(size, size, size);
+    s.Position.X :=  v.X * scale;     //rotate about axis
+    s.Position.Y := -v.Y * scale;
+    s.Position.Z := -v.Z * scale;
+    s.MaterialSource := mat1;
+    if i > limit then s.MaterialSource := mat2;
+    ctrl.AddObject(s);
+    Inc(i);
   end;
 end;
 

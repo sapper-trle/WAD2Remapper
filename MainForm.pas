@@ -8,7 +8,8 @@ uses
   System.Math.Vectors, FMX.Types3D, FMX.Controls3D, FMX.Objects3D,
   FMX.MaterialSources, FMX.Gestures, FMX.Controls.Presentation, FMX.StdCtrls,
   FMX.Menus, System.Actions, FMX.ActnList, FMX.StdActns, FMX.Layouts,
-  FMX.TreeView;
+  FMX.TreeView,
+  Wad2;
 
 type
   TForm1 = class(TForm)
@@ -44,6 +45,7 @@ type
     LightMaterialSource1: TLightMaterialSource;
     ColorMaterialSource1: TColorMaterialSource;
     Light1: TLight;
+    ColorMaterialSource2: TColorMaterialSource;
     procedure Viewport3DMainMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Single);
     procedure Viewport3DMainMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -69,7 +71,7 @@ var
 
 implementation
 
-uses Wad2, FMX.DialogService;
+uses FMX.DialogService;
 
 {$R *.fmx}
 
@@ -104,6 +106,7 @@ begin
     CameraZ.Position.Z := newZ;
 end;
 
+
 procedure TForm1.DummySceneRender(Sender: TObject; Context: TContext3D);
 var
   msh : TWadMesh;
@@ -115,9 +118,16 @@ begin
   msh := w.moveables[0].meshes[0];
   m := ConvertMesh(msh);
   md := ConvertMesh2(msh);
+  Mesh1.WrapMode := TMeshWrapMode.Resize; // important since default of Stretch will deform mesh
+//  Mesh1.Visible := False;
+  CylY.Visible := False;
+  CylX.Visible := False;
+  CylZ.Visible :=False;
   Context.BeginScene;
+  CreatePoints(msh,dummyscene, MaterialSourceY, MaterialSourceX);
   Mesh1.Data.Assign(m.Data);
   Context.DrawLines(md.VertexBuffer,md.IndexBuffer,ColorMaterialSource1.Material,1.0);
+//  Context.DrawPoints(m.Data.VertexBuffer, m.Data.IndexBuffer,ColorMaterialSource2.Material,1.0);
   Context.EndScene;
   m.Free;
   md.Free;
@@ -146,34 +156,34 @@ var
   i : Integer;
   msh : TWadMesh;
 begin
-  {$IFDEF DEBUG}
-    if not FileExists(filename) then Exit;
-    memstream.loadfromfile(filename);
-    if not LoadWad2(memstream, w) then
+{$IFDEF DEBUG}
+  if not FileExists(filename) then Exit;
+  memstream.loadfromfile(filename);
+  if not LoadWad2(memstream, w) then
+  begin
+    TDialogService.MessageDialog('Unable to load file',TMsgDlgType.mtError,[TMsgDlgBtn.mbOK],TMsgDlgBtn.mbOK,0,nil);
+    Caption := FORMCAPTION;
+    Exit;
+  end;
+  Caption := FORMCAPTION + ' - Debug test.wad2';
+  TreeView1.BeginUpdate;
+  TreeView1.Clear;
+  for m in w.moveables do
+  begin
+    t := TTreeViewItem.Create(TreeView1);
+    t.Text := Format('Moveable%d',[m.slot]);
+    t.Parent:= TreeView1;
+    i := 0;
+    for msh in m.meshes do
     begin
-      TDialogService.MessageDialog('Unable to load file',TMsgDlgType.mtError,[TMsgDlgBtn.mbOK],TMsgDlgBtn.mbOK,0,nil);
-      Caption := FORMCAPTION;
-      Exit;
+      t2 := TTreeViewItem.Create(TreeView1);
+      t2.Text := Format('%s[%d]',[msh.name,i]);
+      t2.Parent := t;
+      inc(i);
     end;
-    Caption := FORMCAPTION + ' - Debug test.wad2';
-    TreeView1.BeginUpdate;
-    TreeView1.Clear;
-    for m in w.moveables do
-    begin
-      t := TTreeViewItem.Create(TreeView1);
-      t.Text := Format('Moveable%d',[m.slot]);
-      t.Parent:= TreeView1;
-      i := 0;
-      for msh in m.meshes do
-      begin
-        t2 := TTreeViewItem.Create(TreeView1);
-        t2.Text := Format('Mesh%d',[i]);
-        t2.Parent := t;
-        inc(i);
-      end;
-    end;
-    TreeView1.EndUpdate;
-  {$ENDIF}
+  end;
+  TreeView1.EndUpdate;
+{$ENDIF}
 end;
 
 
@@ -209,7 +219,7 @@ begin
       for msh in m.meshes do
       begin
         t2 := TTreeViewItem.Create(TreeView1);
-        t2.Text := Format('Mesh%d',[i]);
+        t2.Text := Format('%s[%d]',[msh.name,i]);
         t2.Parent := t;
         inc(i);
       end;
