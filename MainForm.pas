@@ -86,7 +86,7 @@ const
   ROTATION_STEP = 0.5;
   ZOOM_STEP = 2;
   CAMERA_MAX_Z = -2;
-  CAMERA_MIN_Z = -102;
+  CAMERA_MIN_Z = -52;
 
   FORMCAPTION = 'WAD2 Remapper';
 

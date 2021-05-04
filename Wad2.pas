@@ -327,29 +327,36 @@ const
 var
   v : TPoint3D;
   scale, size : Single;
-  s : TSphere;
+  sg, sr : TSphere;
+  s : TProxyObject;
   i, limit : Integer;
-  child : TFMXObject;
 begin
   ctrl.DeleteChildren;
   scale := 0.005;
   size := 0.03;
   limit := (msh.verts.Count mod 256) - 1;
   if limit > max then limit := max;
+  sg := TSphere.Create(ctrl);
+  sg.Parent := ctrl; // essential
+  sg.Visible := False;
+  sg.MaterialSource := mat1;
+  sr := TSphere.Create(ctrl);
+  sr.Parent := ctrl; // essential
+  sr.Visible := False;
+  sr.MaterialSource := mat2;
   i := 0;
   for v in msh.verts do
   begin
-    s := TSphere.Create(ctrl);
+    s := TProxyObject.Create(ctrl);
+    s.SourceObject := sg;
+    if i > limit then s.SourceObject := sr;
+    s.Parent := ctrl;
     s.Tag := i;
-    s.TagString := 'sphere';
     s.HitTest := True;
     s.SetSize(size, size, size);
     s.Position.X :=  v.X * scale;     //rotate about axis
     s.Position.Y := -v.Y * scale;
     s.Position.Z := -v.Z * scale;
-    s.MaterialSource := mat1;
-    if i > limit then s.MaterialSource := mat2;
-    ctrl.AddObject(s);
     Inc(i);
   end;
 end;
