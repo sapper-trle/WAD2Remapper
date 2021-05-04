@@ -46,6 +46,9 @@ type
     ColorMaterialSource1: TColorMaterialSource;
     Light1: TLight;
     ColorMaterialSource2: TColorMaterialSource;
+    Label1: TLabel;
+    Label2: TLabel;
+    DummyVerts: TDummy;
     procedure Viewport3DMainMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Single);
     procedure Viewport3DMainMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -58,8 +61,12 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure DummySceneRender(Sender: TObject; Context: TContext3D);
+    procedure Viewport3DMainMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Single);
+    procedure TreeView1Click(Sender: TObject);
   private
     FDown: TPointF;
+    FMouseS : TShiftState;
 //    FLastDistance: integer;
     procedure DoZoom(aIn: boolean);
   public
@@ -76,7 +83,7 @@ uses FMX.DialogService;
 {$R *.fmx}
 
 const
-  ROTATION_STEP = 0.6;
+  ROTATION_STEP = 0.5;
   ZOOM_STEP = 2;
   CAMERA_MAX_Z = -2;
   CAMERA_MIN_Z = -102;
@@ -86,6 +93,7 @@ const
 var
   w : TWAD2;
   memstream : TMemoryStream;
+  md : TMeshData;
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
@@ -108,40 +116,39 @@ end;
 
 
 procedure TForm1.DummySceneRender(Sender: TObject; Context: TContext3D);
-var
-  msh : TWadMesh;
-  m : TMesh;
-  md : TmeshData;
 begin
-  if not Assigned(w.moveables) then Exit;
-  if w.moveables.Count = 0 then Exit;
-  msh := w.moveables[0].meshes[0];
-  m := ConvertMesh(msh);
-  md := ConvertMesh2(msh);
-  Mesh1.WrapMode := TMeshWrapMode.Resize; // important since default of Stretch will deform mesh
-//  Mesh1.Visible := False;
-  CylY.Visible := False;
-  CylX.Visible := False;
-  CylZ.Visible :=False;
   Context.BeginScene;
-  CreatePoints(msh,dummyscene, MaterialSourceY, MaterialSourceX);
-  Mesh1.Data.Assign(m.Data);
-  Context.DrawLines(md.VertexBuffer,md.IndexBuffer,ColorMaterialSource1.Material,1.0);
-//  Context.DrawPoints(m.Data.VertexBuffer, m.Data.IndexBuffer,ColorMaterialSource2.Material,1.0);
-  Context.EndScene;
-  m.Free;
-  md.Free;
+  try
+    if Assigned(md) then
+      Context.DrawLines(md.VertexBuffer,md.IndexBuffer,ColorMaterialSource1.Material,1.0);
+  finally
+    Context.EndScene;
+  end;
 end;
 
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   memstream.Free;
   FreeWad(w);
+  md.Free;
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
+const
+  size = 0.015;
 begin
   memstream := TMemoryStream.Create;
+  FMouseS := [];
+  Mesh1.WrapMode := TMeshWrapMode.Resize; // important since default of Stretch will deform mesh
+  CylY.Depth := size;
+  CylY.Width := size;
+  CylX.Depth := size;
+  CylX.Width := size;
+  CylZ.Depth := size;
+  CylZ.Width := size;
+  ConeX.Visible := False;
+  ConeY.Visible := False;
+  ConeZ.Visible := False;
 {$IFDEF DEBUG}
   ReportMemoryLeaksOnShutdown := True;
 {$ENDIF}
@@ -153,7 +160,7 @@ const
 var
   m : TMoveable;
   t, t2 : TTreeViewItem;
-  i : Integer;
+  i, j : Integer;
   msh : TWadMesh;
 begin
 {$IFDEF DEBUG}
@@ -166,23 +173,27 @@ begin
     Exit;
   end;
   Caption := FORMCAPTION + ' - Debug test.wad2';
-  TreeView1.BeginUpdate;
-  TreeView1.Clear;
-  for m in w.moveables do
-  begin
-    t := TTreeViewItem.Create(TreeView1);
-    t.Text := Format('Moveable%d',[m.slot]);
-    t.Parent:= TreeView1;
-    i := 0;
-    for msh in m.meshes do
+    TreeView1.BeginUpdate;
+    TreeView1.Clear;
+    j := 0;
+    for m in w.moveables do
     begin
-      t2 := TTreeViewItem.Create(TreeView1);
-      t2.Text := Format('%s[%d]',[msh.name,i]);
-      t2.Parent := t;
-      inc(i);
+      t := TTreeViewItem.Create(TreeView1);
+      t.Text := Format('Moveable%d',[m.slot]);
+      t.Tag := j;
+      t.Parent:= TreeView1;
+      i := 0;
+      for msh in m.meshes do
+      begin
+        t2 := TTreeViewItem.Create(TreeView1);
+        t2.Text := Format('[%d] %s',[i, msh.name]);
+        t2.Tag := i;
+        t2.Parent := t;
+        inc(i);
+      end;
+      inc(j);
     end;
-  end;
-  TreeView1.EndUpdate;
+    TreeView1.EndUpdate;
 {$ENDIF}
 end;
 
@@ -192,7 +203,7 @@ var
   m : TMoveable;
   msh : TWadMesh;
   T,t2 :TTreeViewItem;
-  i : Integer;
+  i, j : Integer;
 begin
   if OpenDialog1.Execute then
   begin
@@ -210,39 +221,95 @@ begin
     Caption := FORMCAPTION + ' - ' + OpenDialog1.FileName;
     TreeView1.BeginUpdate;
     TreeView1.Clear;
+    j := 0;
     for m in w.moveables do
     begin
       t := TTreeViewItem.Create(TreeView1);
       t.Text := Format('Moveable%d',[m.slot]);
+      t.Tag := j;
       t.Parent:= TreeView1;
       i := 0;
       for msh in m.meshes do
       begin
         t2 := TTreeViewItem.Create(TreeView1);
-        t2.Text := Format('%s[%d]',[msh.name,i]);
+        t2.Text := Format('[%d] %s',[i, msh.name]);
+        t2.Tag := i;
         t2.Parent := t;
         inc(i);
       end;
+      inc(j);
     end;
     TreeView1.EndUpdate;
   end;
+end;
+
+procedure TForm1.TreeView1Click(Sender: TObject);
+var
+  node : TTreeViewItem;
+  movIdx, mshIdx : Integer;
+  m : TMesh;
+  msh : TWadMesh;
+begin
+  node := TreeView1.Selected;
+  if (node.Level = 1) then
+  begin
+    if (node.Count > 0) then
+    begin
+      movIdx := node.Tag;
+      node.Expand;
+      node := node.Items[0];
+      mshIdx := node.Tag;
+      node.Select;
+    end
+    else
+    begin
+      Mesh1.Data.Clear;
+      md.Clear;
+      Exit;
+    end;
+  end
+  else
+  begin
+    mshIdx := node.Tag;
+    movIdx := node.ParentItem.Tag;
+  end;
+  msh := w.moveables[movIdx].meshes[mshIdx];
+  Label2.Text := IntToStr(msh.verts.Count);
+  m := ConvertMesh(msh);
+  Mesh1.Data.Assign(m.Data);
+  m.Free;
+  if Assigned(md) then  md.Clear;
+
+  md.Free;
+  md := ConvertMesh2(msh);
+  CreatePoints(msh, DummyVerts, MaterialSourceY, MaterialSourceX);
+  Label1.Text := IntToStr(node.Level);
 end;
 
 procedure TForm1.Viewport3DMainMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 begin
   FDown := PointF(X, Y);
+  Label1.Text := Format('%.4f %.4f', [x,y]);
+  FMouseS := Shift;
 end;
 
 procedure TForm1.Viewport3DMainMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Single);
 begin
-  if (ssLeft in Shift) then
+  if (ssLeft in FMouseS) then
   begin
     DummyXY.RotationAngle.X := DummyXY.RotationAngle.X - ((Y - FDown.Y) * ROTATION_STEP);
     DummyXY.RotationAngle.Y := DummyXY.RotationAngle.Y + ((X - FDown.X) * ROTATION_STEP);
     FDown := PointF(X, Y);
   end;
+end;
+
+procedure TForm1.Viewport3DMainMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Single);
+begin
+  Viewport3DMainMouseMove(Sender, Shift, X, Y);  //luxophia
+  FMouseS :=[];
 end;
 
 procedure TForm1.Viewport3DMainMouseWheel(Sender: TObject;

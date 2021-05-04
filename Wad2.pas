@@ -3,7 +3,7 @@ unit Wad2;
 interface
 
 uses System.Classes, System.Generics.Collections, System.Math.Vectors,
-  FMX.Types3D, FMX.Objects3D,
+  FMX.Types3D, FMX.Objects3D, FMX.Types,
   FMX.Controls3D,
   FMX.MaterialSources;
 
@@ -40,7 +40,7 @@ procedure FreeWad(var w : TWAD2);
 
 implementation
 
-uses System.SysUtils, LEB128;
+uses System.SysUtils, LEB128 ;
 
 function GetChunkId(const br:TBinaryReader; const chunksize: Integer) : string;
 var
@@ -329,7 +329,9 @@ var
   scale, size : Single;
   s : TSphere;
   i, limit : Integer;
+  child : TFMXObject;
 begin
+  ctrl.DeleteChildren;
   scale := 0.005;
   size := 0.03;
   limit := (msh.verts.Count mod 256) - 1;
@@ -338,7 +340,8 @@ begin
   for v in msh.verts do
   begin
     s := TSphere.Create(ctrl);
-    s.TagString := IntToStr(i);
+    s.Tag := i;
+    s.TagString := 'sphere';
     s.HitTest := True;
     s.SetSize(size, size, size);
     s.Position.X :=  v.X * scale;     //rotate about axis
@@ -355,7 +358,6 @@ procedure FreeWad(var w : TWAD2);
 var
   m : TMoveable;
   msh : TWadMesh;
-
 begin
   if Assigned(w.moveables) then
   begin
