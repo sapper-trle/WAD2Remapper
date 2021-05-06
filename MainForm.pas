@@ -9,7 +9,7 @@ uses
   FMX.MaterialSources, FMX.Gestures, FMX.Controls.Presentation, FMX.StdCtrls,
   FMX.Menus, System.Actions, FMX.ActnList, FMX.StdActns, FMX.Layouts,
   FMX.TreeView,
-  Wad2;
+  Wad2, FMX.Ani;
 
 type
   TForm1 = class(TForm)
@@ -49,6 +49,8 @@ type
     Label1: TLabel;
     Label2: TLabel;
     DummyVerts: TDummy;
+    Label3: TLabel;
+    Label4: TLabel;
     procedure Viewport3DMainMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Single);
     procedure Viewport3DMainMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -64,10 +66,12 @@ type
     procedure Viewport3DMainMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Single);
     procedure TreeView1Click(Sender: TObject);
+    procedure DummyVertsMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Single; RayPos, RayDir: TVector3D);
   private
     FDown: TPointF;
     FMouseS : TShiftState;
-//    FLastDistance: integer;
+    FSelectedVert : Integer;
     procedure DoZoom(aIn: boolean);
   public
     { Public declarations }
@@ -85,7 +89,7 @@ uses FMX.DialogService;
 const
   ROTATION_STEP = 0.5;
   ZOOM_STEP = 2;
-  CAMERA_MAX_Z = -2;
+  CAMERA_MAX_Z = -1.5;
   CAMERA_MIN_Z = -52;
 
   FORMCAPTION = 'WAD2 Remapper';
@@ -101,6 +105,7 @@ begin
   DummyXY.RotationAngle.X := 0;
   DummyXY.RotationAngle.Y := 0;
 end;
+
 
 procedure TForm1.DoZoom(aIn: boolean);
 var newZ: single;
@@ -126,6 +131,32 @@ begin
   end;
 end;
 
+procedure TForm1.DummyVertsMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Single; RayPos, RayDir: TVector3D);
+const
+  scale = 1.0/0.005;
+var
+  p : TProxyObject;
+  i : Integer;
+begin
+  p := TProxyObject(Sender);
+  Label1.Text := p.Tag.ToString;
+  Label2.Text := Format('x: %.0f y: %.0f z: %.0f',[p.Position.X*scale, -p.Position.Y*scale, -p.Position.Z*scale]);
+  for i := 0 to DummyVerts.ChildrenCount-1 do
+  begin
+    if DummyVerts.Children[i].Tag = FSelectedVert then
+    begin
+      TProxyObject(DummyVerts.Children[i]).Scale.X := 1;
+      TProxyObject(DummyVerts.Children[i]).Scale.y := 1;
+      TProxyObject(DummyVerts.Children[i]).Scale.z := 1;
+    end;
+  end;
+  FSelectedVert := p.Tag;
+  p.Scale.X := 2;
+  p.Scale.Y := 2;
+  p.Scale.Z := 2;
+end;
+
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   memstream.Free;
@@ -135,7 +166,7 @@ end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 const
-  size = 0.015;
+  size = 0.01;
 begin
   memstream := TMemoryStream.Create;
   FMouseS := [];
@@ -149,6 +180,7 @@ begin
   ConeX.Visible := False;
   ConeY.Visible := False;
   ConeZ.Visible := False;
+  FSelectedVert := -1;
 {$IFDEF DEBUG}
   ReportMemoryLeaksOnShutdown := True;
 {$ENDIF}
@@ -263,6 +295,7 @@ begin
     end
     else
     begin
+      // doubt this will ever be hit
       Mesh1.Data.Clear;
       md.Clear;
       Exit;
@@ -274,23 +307,23 @@ begin
     movIdx := node.ParentItem.Tag;
   end;
   msh := w.moveables[movIdx].meshes[mshIdx];
-  Label2.Text := IntToStr(msh.verts.Count);
+  Label3.Text := msh.verts.Count.ToString;
   m := ConvertMesh(msh);
   Mesh1.Data.Assign(m.Data);
   m.Free;
   if Assigned(md) then  md.Clear;
-
   md.Free;
   md := ConvertMesh2(msh);
-  CreatePoints(msh, DummyVerts, MaterialSourceY, MaterialSourceX);
-  Label1.Text := IntToStr(node.Level);
+  CreatePoints(msh, DummyVerts, MaterialSourceY, MaterialSourceX, DummyVertsMouseDown);
+  FSelectedVert := -1;
+  Label4.Text := msh.vertlimit.ToString;
 end;
 
 procedure TForm1.Viewport3DMainMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 begin
   FDown := PointF(X, Y);
-  Label1.Text := Format('%.4f %.4f', [x,y]);
+//  Label1.Text := Format('%.4f %.4f', [x,y]);
   FMouseS := Shift;
 end;
 

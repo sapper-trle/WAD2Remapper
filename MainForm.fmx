@@ -105,6 +105,7 @@ object Form1: TForm1
         Width = 1.000000000000000000
         Height = 1.000000000000000000
         Depth = 1.000000000000000000
+        OnMouseDown = DummyVertsMouseDown
       end
     end
     object DummyXY: TDummy
@@ -149,8 +150,8 @@ object Form1: TForm1
       Emissive = claNull
       Specular = xFF606060
       Shininess = 30
-      Left = 32
-      Top = 480
+      Left = 256
+      Top = 200
     end
     object MaterialSourceZ: TLightMaterialSource
       Diffuse = claBlue
@@ -158,8 +159,8 @@ object Form1: TForm1
       Emissive = claNull
       Specular = xFF606060
       Shininess = 30
-      Left = 72
-      Top = 272
+      Left = 256
+      Top = 88
     end
     object MaterialSourceX: TLightMaterialSource
       Diffuse = claRed
@@ -167,8 +168,8 @@ object Form1: TForm1
       Emissive = claNull
       Specular = xFF606060
       Shininess = 30
-      Left = 16
-      Top = 288
+      Left = 256
+      Top = 144
     end
     object LightMaterialSource1: TLightMaterialSource
       Diffuse = claSilver
@@ -177,7 +178,7 @@ object Form1: TForm1
       Specular = xFF606060
       Shininess = 30
       Left = 256
-      Top = 488
+      Top = 368
     end
   end
   object StatusBar1: TStatusBar
@@ -189,8 +190,8 @@ object Form1: TForm1
     TabOrder = 4
   end
   object Button1: TButton
-    Position.X = 80.000000000000000000
-    Position.Y = 336.000000000000000000
+    Position.X = 48.000000000000000000
+    Position.Y = 288.000000000000000000
     Size.Width = 113.000000000000000000
     Size.Height = 41.000000000000000000
     Size.PlatformDefault = False
@@ -226,8 +227,8 @@ object Form1: TForm1
     DefaultExt = '.wad2'
     Filter = 'WadTool Files (*.wad2)|*.wad2|All Files (*.*)|*.*'
     Options = [ofHideReadOnly, ofFileMustExist, ofEnableSizing]
-    Left = 144
-    Top = 480
+    Left = 256
+    Top = 424
   end
   object TreeView1: TTreeView
     Position.X = 8.000000000000000000
@@ -263,19 +264,44 @@ object Form1: TForm1
   end
   object ColorMaterialSource1: TColorMaterialSource
     Color = claAqua
-    Left = 144
-    Top = 280
+    Left = 256
+    Top = 32
   end
   object ColorMaterialSource2: TColorMaterialSource
     Color = claBlack
-    Left = 208
-    Top = 480
+    Left = 256
+    Top = 312
   end
   object Label1: TLabel
     AutoSize = True
     StyledSettings = [Family, Style, FontColor]
     Position.X = 8.000000000000000000
-    Position.Y = 400.000000000000000000
+    Position.Y = 336.000000000000000000
+    Size.Width = 120.000000000000000000
+    Size.Height = 27.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 20.000000000000000000
+    Text = 'Label1'
+    TabOrder = 26
+  end
+  object Label2: TLabel
+    AutoSize = True
+    StyledSettings = [Family, Style, FontColor]
+    Position.X = 8.000000000000000000
+    Position.Y = 392.000000000000000000
+    Size.Width = 58.000000000000000000
+    Size.Height = 27.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 20.000000000000000000
+    TextSettings.WordWrap = False
+    Text = 'Label1'
+    TabOrder = 25
+  end
+  object Label3: TLabel
+    AutoSize = True
+    StyledSettings = [Family, Style, FontColor]
+    Position.X = 8.000000000000000000
+    Position.Y = 440.000000000000000000
     Size.Width = 120.000000000000000000
     Size.Height = 27.000000000000000000
     Size.PlatformDefault = False
@@ -283,11 +309,11 @@ object Form1: TForm1
     Text = 'Label1'
     TabOrder = 24
   end
-  object Label2: TLabel
+  object Label4: TLabel
     AutoSize = True
     StyledSettings = [Family, Style, FontColor]
-    Position.X = 152.000000000000000000
-    Position.Y = 400.000000000000000000
+    Position.X = 8.000000000000000000
+    Position.Y = 480.000000000000000000
     Size.Width = 120.000000000000000000
     Size.Height = 27.000000000000000000
     Size.PlatformDefault = False
@@ -296,8 +322,8 @@ object Form1: TForm1
     TabOrder = 23
   end
   object ActionList1: TActionList
-    Left = 80
-    Top = 480
+    Left = 256
+    Top = 256
     object FileExit1: TFileExit
       Category = 'File'
       Hint = 'Quit|Quits the application'

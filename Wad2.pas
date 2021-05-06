@@ -3,7 +3,7 @@ unit Wad2;
 interface
 
 uses System.Classes, System.Generics.Collections, System.Math.Vectors,
-  FMX.Types3D, FMX.Objects3D, FMX.Types,
+  FMX.Types3D, FMX.Objects3D, FMX.Types, FMX.Effects,
   FMX.Controls3D,
   FMX.MaterialSources;
 
@@ -18,6 +18,7 @@ type
     quads : TList<TPoly>;
     tris  : TList<TPoly>;
     name : string;
+    vertlimit : Integer;
   end;
 
   TMoveable = record
@@ -35,12 +36,20 @@ type
 function LoadWad2(const stream:TMemoryStream; var w :TWAD2):Boolean;
 function ConvertMesh(const msh : TWadMesh) : TMesh;
 function ConvertMesh2(const msh : TWadMesh) : TMeshData;
-procedure CreatePoints(const msh:TWadMesh; ctrl:TControl3D; mat1,mat2:TMaterialSource);
+procedure CreatePoints(const msh:TWadMesh; ctrl:TControl3D; mat1,mat2:TMaterialSource;e:TMouseEvent3D);
 procedure FreeWad(var w : TWAD2);
 
 implementation
 
-uses System.SysUtils, LEB128 ;
+uses System.SysUtils, LEB128, FMX.Dialogs ;
+
+function CalcLimit(const msh:TWadMesh):Integer;
+const
+  MAX = 127;
+begin
+  Result := (msh.verts.Count mod 256) - 1;
+  if Result > MAX then Result := MAX;
+end;
 
 function GetChunkId(const br:TBinaryReader; const chunksize: Integer) : string;
 var
@@ -182,6 +191,7 @@ begin
                   if readDataCount4 <> chunkSize4 then stream.Position := chunkstart4 + chunksize4;
                 end;
               end;
+              msh.vertlimit := CalcLimit(msh);
               mov.meshes.Add(msh);
             end
             else
@@ -321,35 +331,34 @@ begin
   end;
 end;
 
-procedure CreatePoints(const msh:TWadMesh; ctrl:TControl3D; mat1, mat2:TMaterialSource);
-const
-  max = 127;
+procedure CreatePoints(const msh:TWadMesh; ctrl:TControl3D; mat1, mat2:TMaterialSource; e:TMouseEvent3D);
 var
   v : TPoint3D;
   scale, size : Single;
   sg, sr : TSphere;
   s : TProxyObject;
-  i, limit : Integer;
+  i : Integer;
 begin
   ctrl.DeleteChildren;
   scale := 0.005;
-  size := 0.03;
-  limit := (msh.verts.Count mod 256) - 1;
-  if limit > max then limit := max;
+  size := 0.018;
+
   sg := TSphere.Create(ctrl);
   sg.Parent := ctrl; // essential
   sg.Visible := False;
   sg.MaterialSource := mat1;
+  sg.Tag := -100;
   sr := TSphere.Create(ctrl);
   sr.Parent := ctrl; // essential
   sr.Visible := False;
   sr.MaterialSource := mat2;
+  sr.Tag := -100;
   i := 0;
   for v in msh.verts do
   begin
     s := TProxyObject.Create(ctrl);
     s.SourceObject := sg;
-    if i > limit then s.SourceObject := sr;
+    if i > msh.vertlimit then s.SourceObject := sr;
     s.Parent := ctrl;
     s.Tag := i;
     s.HitTest := True;
@@ -357,6 +366,7 @@ begin
     s.Position.X :=  v.X * scale;     //rotate about axis
     s.Position.Y := -v.Y * scale;
     s.Position.Z := -v.Z * scale;
+    s.OnMouseDown := e;
     Inc(i);
   end;
 end;
