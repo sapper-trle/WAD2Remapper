@@ -68,11 +68,14 @@ type
     procedure TreeView1Click(Sender: TObject);
     procedure DummyVertsMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Single; RayPos, RayDir: TVector3D);
+    procedure DummyVertsRender(Sender: TObject; Context: TContext3D);
   private
     FDown: TPointF;
     FMouseS : TShiftState;
     FSelectedVert : Integer;
+    FmovIdx, FmshIdx : Integer;
     procedure DoZoom(aIn: boolean);
+    procedure SwapVerts(v1, v2 : Integer);
   public
     { Public declarations }
   end;
@@ -88,7 +91,7 @@ uses FMX.DialogService;
 
 const
   ROTATION_STEP = 0.5;
-  ZOOM_STEP = 2;
+  ZOOM_STEP = 1;
   CAMERA_MAX_Z = -1.5;
   CAMERA_MIN_Z = -52;
 
@@ -137,24 +140,45 @@ const
   scale = 1.0/0.005;
 var
   p : TProxyObject;
-  i : Integer;
 begin
   p := TProxyObject(Sender);
-  Label1.Text := p.Tag.ToString;
-  Label2.Text := Format('x: %.0f y: %.0f z: %.0f',[p.Position.X*scale, -p.Position.Y*scale, -p.Position.Z*scale]);
+  if (ssLeft in Shift)  and (ssCtrl in Shift) and (FSelectedVert > -1)then
+  begin
+    SwapVerts(FSelectedVert, p.Tag);
+  end
+  else
+  if ssLeft in Shift then
+  begin
+    Label1.Text := p.Tag.ToString;
+    Label2.Text := Format('x: %.0f y: %.0f z: %.0f',[p.Position.X*scale, -p.Position.Y*scale, -p.Position.Z*scale]);
+    FSelectedVert := p.Tag;
+  end;
+end;
+
+
+procedure TForm1.DummyVertsRender(Sender: TObject; Context: TContext3D);
+var
+  i : Integer;
+begin
+  if FSelectedVert < 0 then Exit;
+  Context.BeginScene;
   for i := 0 to DummyVerts.ChildrenCount-1 do
   begin
+    if DummyVerts.Children[i].Tag < 0 then Continue;
     if DummyVerts.Children[i].Tag = FSelectedVert then
+    begin
+      TProxyObject(DummyVerts.Children[i]).Scale.X := 2;
+      TProxyObject(DummyVerts.Children[i]).Scale.y := 2;
+      TProxyObject(DummyVerts.Children[i]).Scale.z := 2;
+    end
+    else
     begin
       TProxyObject(DummyVerts.Children[i]).Scale.X := 1;
       TProxyObject(DummyVerts.Children[i]).Scale.y := 1;
       TProxyObject(DummyVerts.Children[i]).Scale.z := 1;
     end;
   end;
-  FSelectedVert := p.Tag;
-  p.Scale.X := 2;
-  p.Scale.Y := 2;
-  p.Scale.Z := 2;
+  Context.EndScene;
 end;
 
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -229,7 +253,6 @@ begin
 {$ENDIF}
 end;
 
-
 procedure TForm1.OpenClick(Sender: TObject);
 var
   m : TMoveable;
@@ -275,6 +298,167 @@ begin
   end;
 end;
 
+
+procedure TForm1.SwapVerts(v1, v2: Integer);
+const
+  aux = $DeadBeef;
+var
+  i : Integer;
+  v : TPoint3D;
+  msh : TWadMesh;
+  m : TMesh;
+  p :TPoly;
+begin
+  if v1 = v2 then Exit;
+  msh := w.moveables[FmovIdx].meshes[FmshIdx];
+  v := msh.verts[v1];
+  w.moveables[FmovIdx].meshes[FmshIdx].verts[v1] := msh.verts[v2];
+  w.moveables[FmovIdx].meshes[FmshIdx].verts[v2] := v;
+
+  for i := 0 to msh.tris.Count-1 do
+  begin
+    p := w.moveables[FmovIdx].meshes[FmshIdx].tris[i];
+    if p.p1 = v1 then
+    begin
+      p.p1 := aux;
+      w.moveables[FmovIdx].meshes[FmshIdx].tris[i] := p;
+    end;
+    if p.p2 = v1 then
+    begin
+      p.p2 := aux;
+      w.moveables[FmovIdx].meshes[FmshIdx].tris[i] := p;
+    end;
+    if p.p3 = v1 then
+    begin
+      p.p3 := aux;
+      w.moveables[FmovIdx].meshes[FmshIdx].tris[i] := p;
+    end;
+  end;
+
+  for i := 0 to msh.tris.Count-1 do
+  begin
+    p := w.moveables[FmovIdx].meshes[FmshIdx].tris[i];
+    if p.p1 = v2 then
+    begin
+      p.p1 := v1;
+      w.moveables[FmovIdx].meshes[FmshIdx].tris[i] := p;
+    end;
+    if p.p2 = v2 then
+    begin
+      p.p2 := v1;
+      w.moveables[FmovIdx].meshes[FmshIdx].tris[i] := p;
+    end;
+    if p.p3 = v2 then
+    begin
+      p.p3 := v1;
+      w.moveables[FmovIdx].meshes[FmshIdx].tris[i] := p;
+    end;
+  end;
+
+  for i := 0 to msh.tris.Count-1 do
+  begin
+    p := w.moveables[FmovIdx].meshes[FmshIdx].tris[i];
+    if p.p1 = aux then
+    begin
+      p.p1 := v2;
+      w.moveables[FmovIdx].meshes[FmshIdx].tris[i] := p;
+    end;
+    if p.p2 = aux then
+    begin
+      p.p2 := v2;
+      w.moveables[FmovIdx].meshes[FmshIdx].tris[i] := p;
+    end;
+    if p.p3 = aux then
+    begin
+      p.p3 := v2;
+      w.moveables[FmovIdx].meshes[FmshIdx].tris[i] := p;
+    end;
+  end;
+  // quads
+  for i := 0 to msh.quads.Count-1 do
+  begin
+    p := w.moveables[FmovIdx].meshes[FmshIdx].quads[i];
+    if p.p1 = v1 then
+    begin
+      p.p1 := aux;
+      w.moveables[FmovIdx].meshes[FmshIdx].quads[i] := p;
+    end;
+    if p.p2 = v1 then
+    begin
+      p.p2 := aux;
+      w.moveables[FmovIdx].meshes[FmshIdx].quads[i] := p;
+    end;
+    if p.p3 = v1 then
+    begin
+      p.p3 := aux;
+      w.moveables[FmovIdx].meshes[FmshIdx].quads[i] := p;
+    end;
+    if p.p4 = v1 then
+    begin
+      p.p4 := aux;
+      w.moveables[FmovIdx].meshes[FmshIdx].quads[i] := p;
+    end;
+  end;
+
+  for i := 0 to msh.quads.Count-1 do
+  begin
+    p := w.moveables[FmovIdx].meshes[FmshIdx].quads[i];
+    if p.p1 = v2 then
+    begin
+      p.p1 := v1;
+      w.moveables[FmovIdx].meshes[FmshIdx].quads[i] := p;
+    end;
+    if p.p2 = v2 then
+    begin
+      p.p2 := v1;
+      w.moveables[FmovIdx].meshes[FmshIdx].quads[i] := p;
+    end;
+    if p.p3 = v2 then
+    begin
+      p.p3 := v1;
+      w.moveables[FmovIdx].meshes[FmshIdx].quads[i] := p;
+    end;
+    if p.p4 = v2 then
+    begin
+      p.p4 := v1;
+      w.moveables[FmovIdx].meshes[FmshIdx].quads[i] := p;
+    end;
+  end;
+
+  for i := 0 to msh.quads.Count-1 do
+  begin
+    p := w.moveables[FmovIdx].meshes[FmshIdx].quads[i];
+    if p.p1 = aux then
+    begin
+      p.p1 := v2;
+      w.moveables[FmovIdx].meshes[FmshIdx].quads[i] := p;
+    end;
+    if p.p2 = aux then
+    begin
+      p.p2 := v2;
+      w.moveables[FmovIdx].meshes[FmshIdx].quads[i] := p;
+    end;
+    if p.p3 = aux then
+    begin
+      p.p3 := v2;
+      w.moveables[FmovIdx].meshes[FmshIdx].quads[i] := p;
+    end;
+    if p.p4 = aux then
+    begin
+      p.p4:= v2;
+      w.moveables[FmovIdx].meshes[FmshIdx].quads[i] := p;
+    end;
+  end;
+
+  m := ConvertMesh(msh);
+  Mesh1.Data.Assign(m.Data);
+  m.Free;
+  if Assigned(md) then  md.Clear;
+  md.Free;
+  md := ConvertMesh2(msh);
+  CreatePoints(msh, DummyVerts, MaterialSourceY, MaterialSourceX, DummyVertsMouseDown);
+end;
+
 procedure TForm1.TreeView1Click(Sender: TObject);
 var
   node : TTreeViewItem;
@@ -306,6 +490,8 @@ begin
     mshIdx := node.Tag;
     movIdx := node.ParentItem.Tag;
   end;
+  FmovIdx := movIdx;
+  FmshIdx := mshIdx;
   msh := w.moveables[movIdx].meshes[mshIdx];
   Label3.Text := msh.verts.Count.ToString;
   m := ConvertMesh(msh);
@@ -323,7 +509,6 @@ procedure TForm1.Viewport3DMainMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 begin
   FDown := PointF(X, Y);
-//  Label1.Text := Format('%.4f %.4f', [x,y]);
   FMouseS := Shift;
 end;
 

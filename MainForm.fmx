@@ -106,6 +106,7 @@ object Form1: TForm1
         Height = 1.000000000000000000
         Depth = 1.000000000000000000
         OnMouseDown = DummyVertsMouseDown
+        OnRender = DummyVertsRender
       end
     end
     object DummyXY: TDummy
