@@ -140,11 +140,13 @@ const
   scale = 1.0/0.005;
 var
   p : TProxyObject;
+  i : Integer;
 begin
   p := TProxyObject(Sender);
   if (ssLeft in Shift)  and (ssCtrl in Shift) and (FSelectedVert > -1)then
   begin
     SwapVerts(FSelectedVert, p.Tag);
+    Label2.Text := Format('x: %.0f y: %.0f z: %.0f',[p.Position.X*scale, -p.Position.Y*scale, -p.Position.Z*scale]);
   end
   else
   if ssLeft in Shift then
@@ -153,6 +155,7 @@ begin
     Label2.Text := Format('x: %.0f y: %.0f z: %.0f',[p.Position.X*scale, -p.Position.Y*scale, -p.Position.Z*scale]);
     FSelectedVert := p.Tag;
   end;
+  DummyVerts.Repaint;
 end;
 
 
@@ -308,6 +311,8 @@ var
   msh : TWadMesh;
   m : TMesh;
   p :TPoly;
+  po, po2 : TProxyObject;
+  src : TControl3D;
 begin
   if v1 = v2 then Exit;
   msh := w.moveables[FmovIdx].meshes[FmshIdx];
@@ -450,13 +455,19 @@ begin
     end;
   end;
 
-  m := ConvertMesh(msh);
-  Mesh1.Data.Assign(m.Data);
-  m.Free;
-  if Assigned(md) then  md.Clear;
-  md.Free;
-  md := ConvertMesh2(msh);
-  CreatePoints(msh, DummyVerts, MaterialSourceY, MaterialSourceX, DummyVertsMouseDown);
+  for i := 0 to DummyVerts.ChildrenCount-1 do
+  begin
+    if DummyVerts.Children[i].Tag = v1 then po  := TProxyObject(DummyVerts.Children[i]);
+    if DummyVerts.Children[i].Tag = v2 then po2 := TProxyObject(DummyVerts.Children[i]);
+  end;
+
+  po.Tag := v2;
+  po2.Tag := v1;
+
+  src := po.SourceObject;
+  po.SourceObject := po2.SourceObject;
+  po2.SourceObject := src;
+
 end;
 
 procedure TForm1.TreeView1Click(Sender: TObject);
