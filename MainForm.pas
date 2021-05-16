@@ -92,6 +92,7 @@ uses FMX.DialogService;
 const
   ROTATION_STEP = 0.5;
   ZOOM_STEP = 1;
+  PAN_STEP = 0.01;
   CAMERA_MAX_Z = -1.5;
   CAMERA_MIN_Z = -52;
 
@@ -105,6 +106,8 @@ var
 procedure TForm1.Button1Click(Sender: TObject);
 begin
   CameraZ.Position.Z := -10;
+  CameraZ.Position.X := 0;
+  CameraZ.Position.Y := 0;
   DummyXY.RotationAngle.X := 0;
   DummyXY.RotationAngle.Y := 0;
 end;
@@ -530,6 +533,12 @@ begin
   begin
     DummyXY.RotationAngle.X := DummyXY.RotationAngle.X - ((Y - FDown.Y) * ROTATION_STEP);
     DummyXY.RotationAngle.Y := DummyXY.RotationAngle.Y + ((X - FDown.X) * ROTATION_STEP);
+    FDown := PointF(X, Y);
+  end
+  else if (ssMiddle in FMouseS) then
+  begin
+    CameraZ.Position.X := CameraZ.Position.X - (X - FDown.X) * PAN_STEP;
+    CameraZ.Position.Y := CameraZ.Position.Y - (Y - FDown.Y) * PAN_STEP;
     FDown := PointF(X, Y);
   end;
 end;
