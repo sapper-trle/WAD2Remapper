@@ -301,6 +301,11 @@ begin
       inc(j);
     end;
     TreeView1.EndUpdate;
+    md.Clear;
+    Mesh1.Data.Clear;
+    DummyVerts.DeleteChildren;
+    FSelectedVert := -1;
+    Viewport3DMain.Repaint;
   end;
 end;
 
