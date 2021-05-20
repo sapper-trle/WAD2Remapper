@@ -8,12 +8,17 @@ uses System.Classes, System.Generics.Collections, System.Math.Vectors,
   FMX.MaterialSources;
 
 type
+  TVert = record
+    coords : TPoint3D;
+    address : Int64;
+  end;
+
   TPoly = record
     p1,p2,p3,p4 : UInt32;
   end;
 
   TWadMesh = record
-    verts : TList<TPoint3D>;
+    verts : TList<TVert>;
     normals : TList<TPoint3D>;
     quads : TList<TPoly>;
     tris  : TList<TPoly>;
@@ -75,6 +80,7 @@ var
   msh : TWadMesh;
   poly : TPoly;
   v , n :TPoint3D;
+  vert : TVert;
 begin
   Result := -1;
   br := TBinaryReader.Create(stream);
@@ -107,7 +113,7 @@ begin
             chunkStart3 := stream.Position;
             if ss = 'W2Mesh' then
             begin
-              msh.verts := TList<TPoint3D>.Create;
+              msh.verts := TList<TVert>.Create;
               msh.normals := TList<TPoint3D>.Create;
               msh.quads := TList<TPoly>.Create;
               msh.tris := TList<TPoly>.Create;
@@ -133,13 +139,15 @@ begin
                     ss := GetChunkId(br, chunkSize5);
                     chunkSize5 := LEB128.ReadInt(br);
                     chunkStart5 := stream.Position;
+                    vert.address := stream.Position;
                     if ss = 'W2Pos' then
                     begin
                       v:= TPoint3D.Create(
                       br.ReadSingle,
                       br.ReadSingle,
                       br.ReadSingle);
-                      msh.verts.Add(v);
+                      vert.coords := v;
+                      msh.verts.Add(vert);
                     end
                     else if ss = 'W2N' then
                     begin
@@ -248,6 +256,7 @@ function ConvertMesh(const msh : TWadMesh):TMesh;
 // convert WadMesh to FMX TMesh
 var
   i : Integer;
+  vert : TVert;
   v : TPoint3D;
   t : TPoly;
   verts : array of TMeshVertex;
@@ -258,8 +267,9 @@ begin
   SetLength(verts, msh.verts.Count);
   i := 0;
   scale := 0.005;
-  for v in msh.verts do
+  for vert in msh.verts do
   begin
+    v := vert.coords;
     verts[i].x := v.X * scale;     //rotate about axis
     verts[i].y := -v.Y * scale;
     verts[i].z := -v.Z * scale;
@@ -293,6 +303,7 @@ function ConvertMesh2(const msh : TWadMesh):TMeshData;
 var
   i : Integer;
   v : TPoint3D;
+  vert : TVert;
   t : TPoly;
   scale : Single;
 begin
@@ -300,8 +311,9 @@ begin
   Result.VertexBuffer.Create([TVertexFormat.Vertex], msh.verts.Count);
   i := 0;
   scale := 0.005;
-  for v in msh.verts do
+  for vert in msh.verts do
   begin
+    v := vert.coords;
     Result.VertexBuffer.Vertices[i] := TPoint3D.Create(v.X * scale, -v.Y * scale, -v.Z * scale);
     Inc(i);
   end;
@@ -334,6 +346,7 @@ end;
 procedure CreatePoints(const msh:TWadMesh; ctrl:TControl3D; mat1, mat2:TMaterialSource; e:TMouseEvent3D);
 var
   v : TPoint3D;
+  vert : TVert;
   scale, size : Single;
   sg, sr : TSphere;
   s : TProxyObject;
@@ -354,8 +367,9 @@ begin
   sr.MaterialSource := mat2;
   sr.Tag := -100;
   i := 0;
-  for v in msh.verts do
+  for vert in msh.verts do
   begin
+    v := vert.coords;
     s := TProxyObject.Create(ctrl);
     s.SourceObject := sg;
     if i > msh.vertlimit then s.SourceObject := sr;

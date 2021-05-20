@@ -69,6 +69,7 @@ type
     procedure DummyVertsMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Single; RayPos, RayDir: TVector3D);
     procedure DummyVertsRender(Sender: TObject; Context: TContext3D);
+    procedure SaveAsClick(Sender: TObject);
   private
     FDown: TPointF;
     FMouseS : TShiftState;
@@ -310,24 +311,50 @@ begin
 end;
 
 
+procedure TForm1.SaveAsClick(Sender: TObject);
+begin
+{$IFDEF DEBUG}
+  if w.moveables.Count > 0 then
+  begin
+    memstream.SaveToFile('C:/Users/Username/Documents/swapwad.wad2');
+    ShowMessage('Saved');
+  end;
+{$ENDIF}
+end;
+
 procedure TForm1.SwapVerts(v1, v2: Integer);
 const
   aux = $DeadBeef;
 var
   i : Integer;
-  v : TPoint3D;
+  va,vb,v : TVert;
   msh : TWadMesh;
   m : TMesh;
   p :TPoly;
   po, po2 : TProxyObject;
   src : TControl3D;
+  bw : TBinaryWriter;
 begin
   if v1 = v2 then Exit;
+  bw := TBinaryWriter.Create(memstream);
   msh := w.moveables[FmovIdx].meshes[FmshIdx];
-  v := msh.verts[v1];
-  w.moveables[FmovIdx].meshes[FmshIdx].verts[v1] := msh.verts[v2];
+  va := msh.verts[v1];
+  vb := msh.verts[v2];
+  v  := msh.verts[v1];
+  v.coords := vb.coords;
+  w.moveables[FmovIdx].meshes[FmshIdx].verts[v1] := v;
+  memstream.Position := v.address;
+  bw.Write(v.coords.X);
+  bw.Write(v.coords.Y);
+  bw.Write(v.coords.Z);
+  v := msh.verts[v2];
+  v.coords := va.coords;
   w.moveables[FmovIdx].meshes[FmshIdx].verts[v2] := v;
-
+  memstream.Position := v.address;
+  bw.Write(v.coords.X);
+  bw.Write(v.coords.Y);
+  bw.Write(v.coords.Z);
+  bw.Free;
   for i := 0 to msh.tris.Count-1 do
   begin
     p := w.moveables[FmovIdx].meshes[FmshIdx].tris[i];

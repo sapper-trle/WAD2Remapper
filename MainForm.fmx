@@ -215,6 +215,7 @@ object Form1: TForm1
       object SaveAs: TMenuItem
         Locked = True
         Text = 'Save As...'
+        OnClick = SaveAsClick
       end
       object Quit: TMenuItem
         Action = FileExit1
