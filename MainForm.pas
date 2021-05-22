@@ -329,7 +329,6 @@ var
   i : Integer;
   va,vb,v : TVert;
   msh : TWadMesh;
-  m : TMesh;
   p :TPoly;
   po, po2 : TProxyObject;
   src : TControl3D;
@@ -489,6 +488,10 @@ begin
       w.moveables[FmovIdx].meshes[FmshIdx].quads[i] := p;
     end;
   end;
+  // Got to rewrite all polys because index swap may increase or decrease the poly chunk size
+  // Indices < 64 are one byte, indices 64 to 8191 are two bytes
+  // However polys chunk size should remain same I think
+  WritePolysChunk(msh, memstream);
 
   for i := 0 to DummyVerts.ChildrenCount-1 do
   begin

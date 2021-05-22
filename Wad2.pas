@@ -15,6 +15,11 @@ type
 
   TPoly = record
     p1,p2,p3,p4 : UInt32;
+    shine : Byte;
+    texture : Integer;
+    u0,v0,u1,v1,u2,v2,u3,v3 : Single;
+    blendMode : Int64;
+    doubleSided : Boolean;
   end;
 
   TWadMesh = record
@@ -24,6 +29,8 @@ type
     tris  : TList<TPoly>;
     name : string;
     vertlimit : Integer;
+    polysAddress : Int64;
+    polysChunkSize : Int64;
   end;
 
   TMoveable = record
@@ -43,10 +50,15 @@ function ConvertMesh(const msh : TWadMesh) : TMesh;
 function ConvertMesh2(const msh : TWadMesh) : TMeshData;
 procedure CreatePoints(const msh:TWadMesh; ctrl:TControl3D; mat1,mat2:TMaterialSource;e:TMouseEvent3D);
 procedure FreeWad(var w : TWAD2);
+procedure WritePolysChunk(const msh: TWadMesh; stream:TMemoryStream);
 
 implementation
 
-uses System.SysUtils, LEB128, FMX.Dialogs ;
+uses System.SysUtils, System.RTLConsts, LEB128, FMX.Dialogs ;
+
+const
+  triChunkId : array[0..4] of UInt8 = ($04, $57, $32, $54, $72);  // W2Tr
+  quadChunkId : array[0..4] of UInt8 = ($04, $57, $32, $55, $71); // W2Uq
 
 function CalcLimit(const msh:TWadMesh):Integer;
 const
@@ -132,6 +144,8 @@ begin
                 else
                 if (ss = 'W2VrtPos') or (ss = 'W2VrtNorm') or (ss = 'W2Polys') then
                 begin
+                  if ss = 'W2Polys' then msh.polysAddress := stream.Position;
+                  if ss = 'W2Polys' then msh.polysChunkSize := chunkSize4;
                   while True do
                   begin
                     chunkSize5 := LEB128.ReadInt(br);
@@ -139,9 +153,9 @@ begin
                     ss := GetChunkId(br, chunkSize5);
                     chunkSize5 := LEB128.ReadInt(br);
                     chunkStart5 := stream.Position;
-                    vert.address := stream.Position;
                     if ss = 'W2Pos' then
                     begin
+                      vert.address := stream.Position;
                       v:= TPoint3D.Create(
                       br.ReadSingle,
                       br.ReadSingle,
@@ -163,21 +177,21 @@ begin
                       poly.p2 := LEB128.ReadInt(br);
                       poly.p3 := LEB128.ReadInt(br);
                       if ss = 'W2Uq' then poly.p4 := LEB128.ReadInt(br);
-                      LEB128.ReadByte(br); //shine
-                      LEB128.ReadInt(br); //texture index
-                      br.ReadSingle; // u0
-                      br.ReadSingle; // v0
-                      br.ReadSingle; // u1
-                      br.ReadSingle; // v1
-                      br.ReadSingle; // u2
-                      br.ReadSingle; // v2
+                      poly.shine := LEB128.ReadByte(br); //shine
+                      poly.texture := LEB128.ReadInt(br); //texture index
+                      poly.u0 := br.ReadSingle; // u0
+                      poly.v0 := br.ReadSingle; // v0
+                      poly.u1 := br.ReadSingle; // u1
+                      poly.v1 := br.ReadSingle; // v1
+                      poly.u2 := br.ReadSingle; // u2
+                      poly.v2 := br.ReadSingle; // v2
                       if ss = 'W2Uq' then
                       begin
-                        br.ReadSingle; // u3
-                        br.ReadSingle; // v3
+                        poly.u3 := br.ReadSingle; // u3
+                        poly.v3 := br.ReadSingle; // v3
                       end;
-                      ReadLEB128(br); //blendmode
-                      br.ReadBoolean; //doublesided
+                      poly.blendMode := ReadLEB128(br); //blendmode
+                      poly.doubleSided := br.ReadBoolean; //doublesided
                       // skip the terminating byte = 0x00
                       readDataCount5 := stream.Position - chunkStart5;
                       if readDataCount5 <> chunkSize5 then stream.Position := chunkstart5 + chunksize5;
@@ -405,6 +419,76 @@ begin
     end;
     w.moveables.Free;
   end;
+end;
+
+procedure WritePolysChunk(const msh:TWadMesh; stream:TMemoryStream);
+var
+  p : TPoly;
+  bw : TBinaryWriter;
+  posChunkSize, posStart, posEnd : Int64;
+begin
+  bw := TBinaryWriter.Create(stream);
+  stream.Position := msh.polysAddress;
+  for p in msh.tris do
+  begin
+    stream.Write(triChunkId, Length(triChunkId));
+    posChunkSize := stream.Position;
+    LEB128.Write(stream, 0, LEB128.MAXIMUMSIZE4BYTE);
+    posStart := stream.Position;
+    LEB128.Write(stream, p.p1, p.p1);
+    LEB128.Write(stream, p.p2, p.p2);
+    LEB128.Write(stream, p.p3, p.p3);
+    LEB128.Write(stream, p.shine, p.shine);
+    LEB128.Write(stream, p.texture, p.texture);
+    bw.Write(p.u0);
+    bw.Write(p.v0);
+    bw.Write(p.u1);
+    bw.Write(p.v1);
+    bw.Write(p.u2);
+    bw.Write(p.v2);
+    LEB128.Write(stream, p.blendMode, p.blendMode);
+    bw.Write(p.doubleSided);
+    bw.Write(Byte(0));
+    posEnd := stream.Position;
+    stream.Position := posChunkSize;
+    LEB128.Write(stream, posEnd - posStart, LEB128.MAXIMUMSIZE4BYTE);
+    stream.Position := posEnd;
+  end;
+
+  for p in msh.quads do
+  begin
+    stream.Write(quadChunkId, Length(quadChunkId));
+    posChunkSize := stream.Position;
+    LEB128.Write(stream, 0, LEB128.MAXIMUMSIZE4BYTE);
+    posStart := stream.Position;
+    LEB128.Write(stream, p.p1, p.p1);
+    LEB128.Write(stream, p.p2, p.p2);
+    LEB128.Write(stream, p.p3, p.p3);
+    LEB128.Write(stream, p.p4, p.p4);
+    LEB128.Write(stream, p.shine, p.shine);
+    LEB128.Write(stream, p.texture, p.texture);
+    bw.Write(p.u0);
+    bw.Write(p.v0);
+    bw.Write(p.u1);
+    bw.Write(p.v1);
+    bw.Write(p.u2);
+    bw.Write(p.v2);
+    bw.Write(p.u3);
+    bw.Write(p.v3);
+    LEB128.Write(stream, p.blendMode, p.blendMode);
+    bw.Write(p.doubleSided);
+    bw.Write(Byte(0));
+    posEnd := stream.Position;
+    stream.Position := posChunkSize;
+    LEB128.Write(stream, posEnd - posStart, LEB128.MAXIMUMSIZE4BYTE);
+    stream.Position := posEnd
+  end;
+  bw.Write(Byte(0));
+{$IFDEF DEBUG}
+  if (stream.Position - msh.polysAddress) <> msh.polysChunkSize then
+    ShowMessage('polys chunksize mismatch');
+{$ENDIF}
+  bw.Free;
 end;
 
 end.
