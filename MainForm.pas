@@ -212,6 +212,11 @@ begin
   ConeY.Visible := False;
   ConeZ.Visible := False;
   FSelectedVert := -1;
+  TreeView1.Clear;
+  Label1.Text := '';
+  Label2.Text := '';
+  Label3.Text := '';
+  Label4.Text := '';
 {$IFDEF DEBUG}
   ReportMemoryLeaksOnShutdown := True;
 {$ENDIF}
@@ -302,10 +307,14 @@ begin
       inc(j);
     end;
     TreeView1.EndUpdate;
-    md.Clear;
+    if Assigned(md) then md.Clear;
     Mesh1.Data.Clear;
     DummyVerts.DeleteChildren;
     FSelectedVert := -1;
+    Label1.Text := '';
+    Label2.Text := '';
+    Label3.Text := '';
+    Label4.Text := '';
     Viewport3DMain.Repaint;
   end;
 end;
