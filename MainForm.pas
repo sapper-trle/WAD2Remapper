@@ -9,7 +9,7 @@ uses
   FMX.MaterialSources, FMX.Gestures, FMX.Controls.Presentation, FMX.StdCtrls,
   FMX.Menus, System.Actions, FMX.ActnList, FMX.StdActns, FMX.Layouts,
   FMX.TreeView,
-  Wad2, FMX.Ani;
+  Wad2, FMX.Ani, FMX.Effects, FMX.ListBox, FMX.Edit, FMX.ComboEdit;
 
 type
   TForm1 = class(TForm)
@@ -27,7 +27,6 @@ type
     ConeY: TCone;
     CylZ: TCylinder;
     ConeZ: TCone;
-    StatusBar1: TStatusBar;
     Button1: TButton;
     MenuBar1: TMenuBar;
     MenuItem1: TMenuItem;
@@ -51,6 +50,17 @@ type
     DummyVerts: TDummy;
     Label3: TLabel;
     Label4: TLabel;
+    ToolBar1: TToolBar;
+    GridLayout1: TGridLayout;
+    ComboBox1: TComboBox;
+    ComboBox2: TComboBox;
+    Button2: TButton;
+    GroupBox1: TGroupBox;
+    Label5: TLabel;
+    Label6: TLabel;
+    Label7: TLabel;
+    Timer1: TTimer;
+    Label8: TLabel;
     procedure Viewport3DMainMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Single);
     procedure Viewport3DMainMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -70,6 +80,10 @@ type
       Shift: TShiftState; X, Y: Single; RayPos, RayDir: TVector3D);
     procedure DummyVertsRender(Sender: TObject; Context: TContext3D);
     procedure SaveAsClick(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+    procedure ComboBox1Change(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   private
     FDown: TPointF;
     FMouseS : TShiftState;
@@ -114,6 +128,31 @@ begin
 end;
 
 
+procedure TForm1.Button2Click(Sender: TObject);
+begin
+  if ComboBox1.ItemIndex < 0 then Exit;
+  if ComboBox2.ItemIndex < 0 then Exit;
+  if ComboBox1.ItemIndex = ComboBox2.ItemIndex then Exit;
+  SwapVerts(ComboBox1.ItemIndex, ComboBox2.ItemIndex);
+  ComboBox1Change(Sender);
+  Timer1.Enabled := True;
+  Label7.Visible := True;
+end;
+
+procedure TForm1.ComboBox1Change(Sender: TObject);
+var
+  msh : TWadMesh;
+  v : TVert;
+begin
+  if ComboBox1.Items.Count = 0 then Exit;
+  FSelectedVert := ComboBox1.ItemIndex;
+  Label1.Text := '#' + FSelectedVert.ToString + ' selected';
+  msh := w.moveables[FmovIdx].meshes[FmshIdx];
+  v := msh.verts[FSelectedVert];
+  Label2.Text := Format('x: %.0f y: %.0f z: %.0f',[v.coords.X, v.coords.Y, v.coords.Z]);
+  Viewport3DMain.Repaint;
+end;
+
 procedure TForm1.DoZoom(aIn: boolean);
 var newZ: single;
 begin
@@ -155,9 +194,10 @@ begin
   else
   if ssLeft in Shift then
   begin
-    Label1.Text := p.Tag.ToString;
+    Label1.Text := '#' + p.Tag.ToString + ' selected';
     Label2.Text := Format('x: %.0f y: %.0f z: %.0f',[p.Position.X*scale, -p.Position.Y*scale, -p.Position.Z*scale]);
     FSelectedVert := p.Tag;
+    ComboBox1.ItemIndex := FSelectedVert;
   end;
   DummyVerts.Repaint;
 end;
@@ -217,10 +257,17 @@ begin
   Label2.Text := '';
   Label3.Text := '';
   Label4.Text := '';
+  label7.Visible := False;
 {$IFDEF DEBUG}
   ReportMemoryLeaksOnShutdown := True;
 {$ENDIF}
 end;
+
+procedure TForm1.FormResize(Sender: TObject);
+begin
+//  GridLayout1.ItemWidth := Viewport3DMain.Width / 5.0;
+end;
+
 
 procedure TForm1.FormShow(Sender: TObject);
 const
@@ -315,6 +362,9 @@ begin
     Label2.Text := '';
     Label3.Text := '';
     Label4.Text := '';
+    ComboBox1.Items.Clear;
+    ComboBox2.Items.Clear;
+    Button1Click(Sender);
     Viewport3DMain.Repaint;
   end;
 end;
@@ -517,12 +567,19 @@ begin
 
 end;
 
+procedure TForm1.Timer1Timer(Sender: TObject);
+begin
+  Label7.Visible := False;
+  Timer1.Enabled := False;
+end;
+
 procedure TForm1.TreeView1Click(Sender: TObject);
 var
   node : TTreeViewItem;
   movIdx, mshIdx : Integer;
   m : TMesh;
   msh : TWadMesh;
+  i : Integer;
 begin
   node := TreeView1.Selected;
   if (node.Level = 1) then
@@ -551,7 +608,7 @@ begin
   FmovIdx := movIdx;
   FmshIdx := mshIdx;
   msh := w.moveables[movIdx].meshes[mshIdx];
-  Label3.Text := msh.verts.Count.ToString;
+  Label3.Text := msh.verts.Count.ToString + ' vertices';
   m := ConvertMesh(msh);
   Mesh1.Data.Assign(m.Data);
   m.Free;
@@ -560,7 +617,18 @@ begin
   md := ConvertMesh2(msh);
   CreatePoints(msh, DummyVerts, MaterialSourceY, MaterialSourceX, DummyVertsMouseDown);
   FSelectedVert := -1;
-  Label4.Text := msh.vertlimit.ToString;
+  Label4.Text := '#'+ msh.vertlimit.ToString + ' max.';
+  ComboBox1.Items.Clear;
+  ComboBox2.Items.Clear;
+  Label1.Text := '';
+  Label2.Text := '';
+  for i := 0 to msh.verts.Count-1 do
+  begin
+    ComboBox1.Items.Add(IntToStr(i));
+    ComboBox2.Items.Add(IntToStr(i));
+  end;
+  ComboBox1.ItemIndex := -1;
+  ComboBox2.ItemIndex := -1;
 end;
 
 procedure TForm1.Viewport3DMainMouseDown(Sender: TObject;

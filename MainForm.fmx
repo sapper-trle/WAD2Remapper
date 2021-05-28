@@ -2,13 +2,14 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'WAD2 Remapper'
-  ClientHeight = 538
-  ClientWidth = 944
+  ClientHeight = 549
+  ClientWidth = 970
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   OnCreate = FormCreate
   OnClose = FormClose
+  OnResize = FormResize
   OnShow = FormShow
   Touch.InteractiveGestures = [Zoom]
   DesignerMasterStyle = 0
@@ -16,9 +17,9 @@ object Form1: TForm1
     Align = FitRight
     Camera = CameraZ
     Color = claTeal
-    Position.X = 304.000000000000000000
-    Size.Width = 640.000000000000000000
-    Size.Height = 538.000000000000000000
+    Position.X = 251.000000000000000000
+    Size.Width = 719.000000000000000000
+    Size.Height = 549.000000000000000000
     Size.PlatformDefault = False
     UsingDesignCamera = False
     OnMouseDown = Viewport3DMainMouseDown
@@ -181,30 +182,140 @@ object Form1: TForm1
       Left = 256
       Top = 368
     end
-  end
-  object StatusBar1: TStatusBar
-    Position.Y = 516.000000000000000000
-    ShowSizeGrip = True
-    Size.Width = 944.000000000000000000
-    Size.Height = 22.000000000000000000
-    Size.PlatformDefault = False
-    TabOrder = 4
-  end
-  object Button1: TButton
-    Position.X = 48.000000000000000000
-    Position.Y = 288.000000000000000000
-    Size.Width = 113.000000000000000000
-    Size.Height = 41.000000000000000000
-    Size.PlatformDefault = False
-    TabOrder = 5
-    Text = 'Reset Camera'
-    OnClick = Button1Click
+    object ToolBar1: TToolBar
+      Align = Bottom
+      Position.Y = 489.000000000000000000
+      Size.Width = 719.000000000000000000
+      Size.Height = 60.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      object GridLayout1: TGridLayout
+        Align = Client
+        ItemHeight = 64.000000000000000000
+        ItemWidth = 135.000000000000000000
+        Orientation = Horizontal
+        Size.Width = 719.000000000000000000
+        Size.Height = 60.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        object Label1: TLabel
+          Align = Left
+          Anchors = []
+          AutoSize = True
+          StyledSettings = [Family, Style, FontColor]
+          Hint = 'Selected vertex index'
+          Margins.Left = 5.000000000000000000
+          Margins.Top = 5.000000000000000000
+          Margins.Right = 5.000000000000000000
+          Margins.Bottom = 5.000000000000000000
+          Position.X = 5.000000000000000000
+          Position.Y = 5.000000000000000000
+          Size.Width = 125.000000000000000000
+          Size.Height = 54.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 20.000000000000000000
+          TextSettings.WordWrap = False
+          Text = 'Label1'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 0
+          TabStop = False
+        end
+        object Label2: TLabel
+          Align = Left
+          Anchors = []
+          AutoSize = True
+          StyledSettings = [Family, Style, FontColor]
+          Hint = 'Coordinates of selected vertex'
+          Margins.Left = 5.000000000000000000
+          Margins.Top = 5.000000000000000000
+          Margins.Right = 5.000000000000000000
+          Margins.Bottom = 5.000000000000000000
+          Position.X = 140.000000000000000000
+          Position.Y = 5.000000000000000000
+          Size.Width = 125.000000000000000000
+          Size.Height = 54.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 15.000000000000000000
+          TextSettings.WordWrap = False
+          Text = 'Label2'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 1
+          TabStop = False
+        end
+        object Label3: TLabel
+          Align = Left
+          Anchors = [akBottom]
+          AutoSize = True
+          AutoTranslate = False
+          StyledSettings = [Family, Style, FontColor]
+          Hint = 'Number of vertices in mesh'
+          Margins.Left = 5.000000000000000000
+          Margins.Top = 5.000000000000000000
+          Margins.Right = 5.000000000000000000
+          Margins.Bottom = 5.000000000000000000
+          Position.X = 275.000000000000000000
+          Position.Y = 5.000000000000000000
+          Size.Width = 125.000000000000000000
+          Size.Height = 54.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 20.000000000000000000
+          TextSettings.WordWrap = False
+          Text = 'Label3'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 2
+          TabStop = False
+        end
+        object Label4: TLabel
+          Align = Left
+          Anchors = []
+          AutoSize = True
+          StyledSettings = [Family, Style]
+          Hint = 'Highest allowable index for joint vertices'
+          Margins.Left = 5.000000000000000000
+          Margins.Top = 5.000000000000000000
+          Margins.Right = 5.000000000000000000
+          Margins.Bottom = 5.000000000000000000
+          Position.X = 410.000000000000000000
+          Position.Y = 5.000000000000000000
+          Size.Width = 125.000000000000000000
+          Size.Height = 54.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 20.000000000000000000
+          TextSettings.FontColor = claGreen
+          TextSettings.WordWrap = False
+          Text = 'Label4'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 3
+          TabStop = False
+        end
+        object Button1: TButton
+          Align = Left
+          Anchors = []
+          Margins.Left = 5.000000000000000000
+          Margins.Top = 5.000000000000000000
+          Margins.Right = 5.000000000000000000
+          Margins.Bottom = 10.000000000000000000
+          Position.X = 545.000000000000000000
+          Position.Y = 5.000000000000000000
+          Size.Width = 125.000000000000000000
+          Size.Height = 49.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 4
+          Text = 'Reset Camera'
+          OnClick = Button1Click
+        end
+      end
+    end
   end
   object MenuBar1: TMenuBar
-    Size.Width = 944.000000000000000000
+    Size.Width = 970.000000000000000000
     Size.Height = 24.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 7
+    TabOrder = 5
     object MenuItem1: TMenuItem
       Text = '&File'
       object Open: TMenuItem
@@ -238,7 +349,7 @@ object Form1: TForm1
     Size.Width = 233.000000000000000000
     Size.Height = 233.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 13
+    TabOrder = 11
     OnClick = TreeView1Click
     Viewport.Width = 229.000000000000000000
     Viewport.Height = 229.000000000000000000
@@ -274,57 +385,84 @@ object Form1: TForm1
     Left = 256
     Top = 312
   end
-  object Label1: TLabel
-    AutoSize = True
-    StyledSettings = [Family, Style, FontColor]
+  object GroupBox1: TGroupBox
     Position.X = 8.000000000000000000
-    Position.Y = 352.000000000000000000
-    Size.Width = 58.000000000000000000
-    Size.Height = 27.000000000000000000
+    Position.Y = 288.000000000000000000
+    Size.Width = 233.000000000000000000
+    Size.Height = 153.000000000000000000
     Size.PlatformDefault = False
-    TextSettings.Font.Size = 20.000000000000000000
-    TextSettings.WordWrap = False
-    Text = 'Label1'
-    TabOrder = 26
+    Text = 'Select vertices to swap'
+    TabOrder = 29
+    object ComboBox2: TComboBox
+      Position.X = 88.000000000000000000
+      Position.Y = 64.000000000000000000
+      Size.Width = 57.000000000000000000
+      Size.Height = 33.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+    end
+    object ComboBox1: TComboBox
+      Position.X = 16.000000000000000000
+      Position.Y = 64.000000000000000000
+      Size.Width = 57.000000000000000000
+      Size.Height = 33.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      OnChange = ComboBox1Change
+    end
+    object Button2: TButton
+      Position.X = 160.000000000000000000
+      Position.Y = 67.000000000000000000
+      Size.Width = 57.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      Text = 'Swap'
+      OnClick = Button2Click
+    end
+    object Label5: TLabel
+      AutoSize = True
+      Position.X = 32.000000000000000000
+      Position.Y = 32.000000000000000000
+      Size.Width = 33.000000000000000000
+      Size.Height = 16.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'V1'
+      TabOrder = 4
+    end
+    object Label6: TLabel
+      AutoSize = True
+      Position.X = 104.000000000000000000
+      Position.Y = 32.000000000000000000
+      Size.Width = 33.000000000000000000
+      Size.Height = 16.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'V2'
+      TabOrder = 3
+    end
+    object Label7: TLabel
+      AutoSize = True
+      StyledSettings = [Family, Size, FontColor]
+      Position.X = 100.000000000000000000
+      Position.Y = 120.000000000000000000
+      Size.Width = 30.000000000000000000
+      Size.Height = 16.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.Font.StyleExt = {00070000000000000004000000}
+      TextSettings.WordWrap = False
+      Text = 'Done'
+      TabOrder = 5
+    end
   end
-  object Label2: TLabel
-    AutoSize = True
-    StyledSettings = [Family, Style, FontColor]
-    Position.X = 8.000000000000000000
-    Position.Y = 392.000000000000000000
-    Size.Width = 58.000000000000000000
-    Size.Height = 27.000000000000000000
+  object Label8: TLabel
+    Position.X = 16.000000000000000000
+    Position.Y = 448.000000000000000000
+    Size.Width = 169.000000000000000000
+    Size.Height = 73.000000000000000000
     Size.PlatformDefault = False
-    TextSettings.Font.Size = 20.000000000000000000
-    TextSettings.WordWrap = False
-    Text = 'Label1'
-    TabOrder = 25
-  end
-  object Label3: TLabel
-    AutoSize = True
-    StyledSettings = [Family, Style, FontColor]
-    Position.X = 8.000000000000000000
-    Position.Y = 432.000000000000000000
-    Size.Width = 58.000000000000000000
-    Size.Height = 27.000000000000000000
-    Size.PlatformDefault = False
-    TextSettings.Font.Size = 20.000000000000000000
-    TextSettings.WordWrap = False
-    Text = 'Label1'
-    TabOrder = 24
-  end
-  object Label4: TLabel
-    AutoSize = True
-    StyledSettings = [Family, Style, FontColor]
-    Position.X = 8.000000000000000000
-    Position.Y = 472.000000000000000000
-    Size.Width = 58.000000000000000000
-    Size.Height = 27.000000000000000000
-    Size.PlatformDefault = False
-    TextSettings.Font.Size = 20.000000000000000000
-    TextSettings.WordWrap = False
-    Text = 'Label1'
-    TabOrder = 23
+    Text = 'Always have a backup copy of your wad2.'
+    TabOrder = 31
+    TabStop = False
   end
   object ActionList1: TActionList
     Left = 256
@@ -336,5 +474,12 @@ object Form1: TForm1
       ShortCut = 27
       ImageIndex = 43
     end
+  end
+  object Timer1: TTimer
+    Enabled = False
+    Interval = 700
+    OnTimer = Timer1Timer
+    Left = 152
+    Top = 208
   end
 end
