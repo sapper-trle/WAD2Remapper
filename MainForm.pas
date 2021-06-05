@@ -549,7 +549,7 @@ begin
   end;
   // Got to rewrite all polys because index swap may increase or decrease the poly chunk size
   // Indices < 64 are one byte, indices 64 to 8191 are two bytes
-  // However polys chunk size should remain same I think
+  // However polys chunk size should remain same I think  !!!wrong if number of faces affected unequal
   WritePolysChunk(msh, memstream);
 
   for i := 0 to DummyVerts.ChildrenCount-1 do

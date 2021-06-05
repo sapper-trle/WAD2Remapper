@@ -36,6 +36,7 @@ type
   TMoveable = record
     slot : UInt32;
     meshes : TList<TWadMesh>;
+    sizeAddress : Int64;
   end;
 
   TWAD2 = record
@@ -43,6 +44,7 @@ type
     version : UInt32;
     compressed : Boolean;
     moveables : TList<TMoveable>;
+    movSizeAddress : Int64;
   end;
 
 function LoadWad2(const stream:TMemoryStream; var w :TWAD2):Boolean;
@@ -50,7 +52,7 @@ function ConvertMesh(const msh : TWadMesh) : TMesh;
 function ConvertMesh2(const msh : TWadMesh) : TMeshData;
 procedure CreatePoints(const msh:TWadMesh; ctrl:TControl3D; mat1,mat2:TMaterialSource;e:TMouseEvent3D);
 procedure FreeWad(var w : TWAD2);
-procedure WritePolysChunk(const msh: TWadMesh; stream:TMemoryStream);
+procedure WritePolysChunk(const msh: TWadMesh; mainstream:TMemoryStream);
 
 implementation
 
@@ -93,6 +95,7 @@ var
   poly : TPoly;
   v , n :TPoint3D;
   vert : TVert;
+  tempAddress : Int64;
 begin
   Result := -1;
   br := TBinaryReader.Create(stream);
@@ -101,19 +104,23 @@ begin
     chunkSize := LEB128.ReadInt(br);
     ss := GetChunkId(br, chunkSize);
     if chunkSize = 0 then Break;
+    tempAddress := stream.Position;
     chunkSize := LEB128.ReadInt(br);
     chunkStart := stream.Position;
     if ss = 'W2Moveables' then
     begin
+      w.movSizeAddress := tempAddress;
       while True do
       begin
         chunkSize2 := LEB128.ReadInt(br);
         if chunkSize2 = 0 then Break;
         ss := GetChunkId(br, chunkSize2);
+        tempAddress := stream.Position;
         chunkSize2 := LEB128.ReadInt(br);
         chunkstart2 := stream.Position;
         if ss = 'W2Moveable' then
         begin
+          mov.sizeAddress := tempAddress;
           mov.slot := LEB128.ReadUint(br); //typeId
           mov.meshes := TList<TWadMesh>.Create;
           while True do
@@ -421,14 +428,16 @@ begin
   end;
 end;
 
-procedure WritePolysChunk(const msh:TWadMesh; stream:TMemoryStream);
+procedure WritePolysChunk(const msh:TWadMesh; mainstream:TMemoryStream);
 var
   p : TPoly;
   bw : TBinaryWriter;
   posChunkSize, posStart, posEnd : Int64;
+  stream : TMemoryStream;
 begin
+  stream := TMemoryStream.Create;
   bw := TBinaryWriter.Create(stream);
-  stream.Position := msh.polysAddress;
+//  stream.Position := msh.polysAddress;
   for p in msh.tris do
   begin
     stream.Write(triChunkId, Length(triChunkId));
@@ -485,10 +494,19 @@ begin
   end;
   bw.Write(Byte(0));
 {$IFDEF DEBUG}
-  if (stream.Position - msh.polysAddress) <> msh.polysChunkSize then
-    ShowMessage('polys chunksize mismatch');
+  if (stream.Position {- msh.polysAddress}) <> msh.polysChunkSize then
+    ShowMessage('polys chunksize mismatch'+ Format('- write %d was %d',[stream.Position{-msh.polysAddress}, msh.polysChunkSize]));
 {$ENDIF}
+  if stream.Position = msh.polysChunkSize then // polys chunk same size so can just overwrite
+  begin
+    stream.Seek(0, soBeginning);
+    mainstream.Position := msh.polysAddress;
+    mainstream.CopyFrom(stream, stream.Size);
+  end;
+  // else have to rewrite whole moveables chunk
+
   bw.Free;
+  stream.Free;
 end;
 
 end.

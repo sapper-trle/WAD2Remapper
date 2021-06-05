@@ -351,6 +351,7 @@ object Form1: TForm1
     Size.PlatformDefault = False
     TabOrder = 11
     OnClick = TreeView1Click
+    OnChange = TreeView1Click
     Viewport.Width = 229.000000000000000000
     Viewport.Height = 229.000000000000000000
     object TreeViewItem1: TTreeViewItem
@@ -455,14 +456,23 @@ object Form1: TForm1
     end
   end
   object Label8: TLabel
+    StyledSettings = [Family, Size, FontColor]
     Position.X = 16.000000000000000000
     Position.Y = 448.000000000000000000
     Size.Width = 169.000000000000000000
     Size.Height = 73.000000000000000000
     Size.PlatformDefault = False
+    TextSettings.Font.StyleExt = {00070000000000000004000000}
     Text = 'Always have a backup copy of your wad2.'
     TabOrder = 31
     TabStop = False
+  end
+  object Timer1: TTimer
+    Enabled = False
+    Interval = 700
+    OnTimer = Timer1Timer
+    Left = 152
+    Top = 208
   end
   object ActionList1: TActionList
     Left = 256
@@ -474,12 +484,5 @@ object Form1: TForm1
       ShortCut = 27
       ImageIndex = 43
     end
-  end
-  object Timer1: TTimer
-    Enabled = False
-    Interval = 700
-    OnTimer = Timer1Timer
-    Left = 152
-    Top = 208
   end
 end
