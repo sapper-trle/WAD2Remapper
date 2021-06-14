@@ -392,6 +392,7 @@ var
   po, po2 : TProxyObject;
   src : TControl3D;
   bw : TBinaryWriter;
+  byteCount : Integer;
 begin
   if v1 = v2 then Exit;
   bw := TBinaryWriter.Create(memstream);
@@ -550,8 +551,7 @@ begin
   // Got to rewrite all polys because index swap may increase or decrease the poly chunk size
   // Indices < 64 are one byte, indices 64 to 8191 are two bytes
   // However polys chunk size should remain same I think  !!!wrong if number of faces affected unequal
-  WritePolysChunk(msh, memstream);
-
+  memstream := WritePolysChunk(w, FmovIdx, FmshIdx, memstream);
   for i := 0 to DummyVerts.ChildrenCount-1 do
   begin
     if DummyVerts.Children[i].Tag = v1 then po  := TProxyObject(DummyVerts.Children[i]);
@@ -614,6 +614,7 @@ begin
   m.Free;
   if Assigned(md) then  md.Clear;
   md.Free;
+  TreeView1.Cursor := crHourGlass;
   md := ConvertMesh2(msh);
   CreatePoints(msh, DummyVerts, MaterialSourceY, MaterialSourceX, DummyVertsMouseDown);
   FSelectedVert := -1;
@@ -629,6 +630,7 @@ begin
   end;
   ComboBox1.ItemIndex := -1;
   ComboBox2.ItemIndex := -1;
+  TreeView1.Cursor := crDefault;
 end;
 
 procedure TForm1.Viewport3DMainMouseDown(Sender: TObject;
@@ -641,7 +643,11 @@ end;
 procedure TForm1.Viewport3DMainMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Single);
 begin
+{$IFDEF DEBUG}
   if (ssLeft in FMouseS) then
+{$ELSE}
+  if (ssRight in FMouseS) then
+{$ENDIF}
   begin
     DummyXY.RotationAngle.X := DummyXY.RotationAngle.X - ((Y - FDown.Y) * ROTATION_STEP);
     DummyXY.RotationAngle.Y := DummyXY.RotationAngle.Y + ((X - FDown.X) * ROTATION_STEP);

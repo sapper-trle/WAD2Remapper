@@ -29,6 +29,7 @@ type
     tris  : TList<TPoly>;
     name : string;
     vertlimit : Integer;
+    sizeAddress, chunkSize : Int64;
     polysAddress : Int64;
     polysChunkSize : Int64;
   end;
@@ -37,6 +38,7 @@ type
     slot : UInt32;
     meshes : TList<TWadMesh>;
     sizeAddress : Int64;
+    chunkSize : Int64;
   end;
 
   TWAD2 = record
@@ -45,6 +47,7 @@ type
     compressed : Boolean;
     moveables : TList<TMoveable>;
     movSizeAddress : Int64;
+    movChunkSize : Int64;
   end;
 
 function LoadWad2(const stream:TMemoryStream; var w :TWAD2):Boolean;
@@ -52,7 +55,7 @@ function ConvertMesh(const msh : TWadMesh) : TMesh;
 function ConvertMesh2(const msh : TWadMesh) : TMeshData;
 procedure CreatePoints(const msh:TWadMesh; ctrl:TControl3D; mat1,mat2:TMaterialSource;e:TMouseEvent3D);
 procedure FreeWad(var w : TWAD2);
-procedure WritePolysChunk(const msh: TWadMesh; mainstream:TMemoryStream);
+function WritePolysChunk(var w:TWAD2; movIdx, mshIdx:Integer; mainstream:TMemoryStream):TMemoryStream;
 
 implementation
 
@@ -110,6 +113,7 @@ begin
     if ss = 'W2Moveables' then
     begin
       w.movSizeAddress := tempAddress;
+      w.movChunkSize := chunkSize;
       while True do
       begin
         chunkSize2 := LEB128.ReadInt(br);
@@ -121,6 +125,7 @@ begin
         if ss = 'W2Moveable' then
         begin
           mov.sizeAddress := tempAddress;
+          mov.chunkSize := chunkSize2;
           mov.slot := LEB128.ReadUint(br); //typeId
           mov.meshes := TList<TWadMesh>.Create;
           while True do
@@ -128,6 +133,7 @@ begin
             chunksize3 := LEB128.ReadInt(br);
             if chunkSize3 = 0 then Break;
             ss := GetChunkId(br, chunksize3);
+            tempAddress := stream.Position;
             chunkSize3 := LEB128.ReadInt(br);
             chunkStart3 := stream.Position;
             if ss = 'W2Mesh' then
@@ -137,6 +143,8 @@ begin
               msh.quads := TList<TPoly>.Create;
               msh.tris := TList<TPoly>.Create;
               msh.name := 'Mesh';
+              msh.sizeAddress := tempAddress;
+              msh.chunkSize := chunkSize3;
               while True do
               begin
                 chunksize4 := LEB128.ReadInt(br);
@@ -428,16 +436,29 @@ begin
   end;
 end;
 
-procedure WritePolysChunk(const msh:TWadMesh; mainstream:TMemoryStream);
+function WritePolysChunk(var w:TWAD2; movIdx, mshIdx:Integer; mainstream:TMemoryStream):TMemoryStream;
+// too lazy to parse WAD2 fully so make changes direct to WAD2 file in memory
+// rather than save out TWad2 record
 var
   p : TPoly;
   bw : TBinaryWriter;
   posChunkSize, posStart, posEnd : Int64;
-  stream : TMemoryStream;
+  stream, tempstream : TMemoryStream;
+  byteCount : Integer;
+  msh : TWadMesh;
+  mov : TMoveable;
+  movsAddress, movAddress : Int64;
+  movsChunkSize, movChunkSize : Int64;
+  i, j : Integer;
 begin
   stream := TMemoryStream.Create;
   bw := TBinaryWriter.Create(stream);
-//  stream.Position := msh.polysAddress;
+  mov := w.moveables[movIdx];
+  msh := w.moveables[movIdx].meshes[mshIdx];
+  movsAddress := w.movSizeAddress;
+  movsChunkSize := w.movChunkSize;
+  movAddress := w.moveables[movIdx].sizeAddress;
+  movChunkSize := w.moveables[movIdx].chunkSize;
   for p in msh.tris do
   begin
     stream.Write(triChunkId, Length(triChunkId));
@@ -497,14 +518,63 @@ begin
   if (stream.Position {- msh.polysAddress}) <> msh.polysChunkSize then
     ShowMessage('polys chunksize mismatch'+ Format('- write %d was %d',[stream.Position{-msh.polysAddress}, msh.polysChunkSize]));
 {$ENDIF}
-  if stream.Position = msh.polysChunkSize then // polys chunk same size so can just overwrite
+  if stream.Size = msh.polysChunkSize then // polys chunk same size so can just overwrite
   begin
-    stream.Seek(0, soBeginning);
     mainstream.Position := msh.polysAddress;
-    mainstream.CopyFrom(stream, stream.Size);
-  end;
-  // else have to rewrite whole moveables chunk
+    mainstream.CopyFrom(stream, 0); // sets source position to 0 then copies all
+    Result := mainstream;
+  end
+  else // else have to adjust whole moveables chunk and following chunks
+  begin
 
+    byteCount := stream.Size - msh.polysChunkSize; // >0 => new chunk is bigger
+    tempstream := TMemoryStream.Create;
+    tempstream.SetSize(mainstream.Size + byteCount);
+    mainstream.Position := 0;
+    tempstream.CopyFrom(mainstream, msh.polysAddress);
+    tempstream.CopyFrom(stream, 0);
+    mainstream.Seek(msh.polysChunkSize, soCurrent);
+    tempstream.CopyFrom(mainstream, mainstream.Size - mainstream.Position);
+    tempstream.Position := msh.polysAddress - 4;
+    LEB128.Write(tempstream, msh.polysChunkSize + byteCount, LEB128.MAXIMUMSIZE4BYTE);
+    msh.polysChunkSize := msh.polysChunkSize + byteCount;
+    tempstream.Position := msh.sizeAddress;
+    LEB128.Write(tempstream, msh.chunkSize + byteCount, LEB128.MAXIMUMSIZE4BYTE);
+    msh.chunkSize := msh.chunkSize + byteCount;
+    tempstream.Position := movsAddress;
+    LEB128.Write(tempstream, movsChunkSize + byteCount, LEB128.MAXIMUMSIZE4BYTE);
+    w.movChunkSize := w.movChunkSize + byteCount;
+    tempstream.Position := movAddress;
+    LEB128.Write(tempstream, movChunkSize + byteCount, LEB128.MAXIMUMSIZE4BYTE);
+    mov.chunkSize := mov.chunkSize + byteCount;
+    mainstream.Free;
+    Result := tempstream;
+
+    mov.meshes[mshIdx] := msh;
+    w.moveables[movIdx] := mov;
+    // have to update all addresses!!!
+    for j := mshIdx+1 to mov.meshes.Count-1 do
+    begin
+      msh := mov.meshes[j];
+      msh.sizeAddress := msh.sizeAddress + byteCount;
+      msh.polysAddress := msh.polysAddress + byteCount;
+      mov.meshes[j] := msh;
+    end;
+    w.moveables[movIdx] := mov;
+    for i := movIdx+1 to w.moveables.Count-1 do
+    begin
+      mov := w.moveables[i];
+      mov.sizeAddress := mov.sizeAddress + byteCount;
+      for j := 0 to mov.meshes.Count-1 do
+      begin
+        msh := mov.meshes[j];
+        msh.sizeAddress := msh.sizeAddress + byteCount;
+        msh.polysAddress := msh.polysAddress + byteCount;
+        mov.meshes[j] := msh;
+      end;
+      w.moveables[i] := mov;
+    end;
+  end;
   bw.Free;
   stream.Free;
 end;
