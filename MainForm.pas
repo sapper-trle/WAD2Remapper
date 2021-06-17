@@ -356,8 +356,11 @@ begin
     TreeView1.EndUpdate;
     if Assigned(md) then md.Clear;
     Mesh1.Data.Clear;
-    DummyVerts.DeleteChildren;
     FSelectedVert := -1;
+    // Next line is hack needed to avoid access violation in Fmx.controls3d when sometimes open new wad2.
+    // Cause unknown??? Occurs when high number of vertices. renderinglist count is not zero even though no children
+    DummyVerts.Visible := False;
+    DummyVerts.DeleteChildren;
     Label1.Text := '';
     Label2.Text := '';
     Label3.Text := '';
@@ -616,6 +619,7 @@ begin
   md.Free;
   TreeView1.Cursor := crHourGlass;
   md := ConvertMesh2(msh);
+  DummyVerts.Visible := True;
   CreatePoints(msh, DummyVerts, MaterialSourceY, MaterialSourceX, DummyVertsMouseDown);
   FSelectedVert := -1;
   Label4.Text := '#'+ msh.vertlimit.ToString + ' max.';

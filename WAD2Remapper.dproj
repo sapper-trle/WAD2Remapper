@@ -118,7 +118,6 @@
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <AppDPIAwarenessMode>PerMonitor</AppDPIAwarenessMode>
         <BT_BuildType>Debug</BT_BuildType>
-        <DCC_DebugDCUs>false</DCC_DebugDCUs>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
