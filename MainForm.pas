@@ -61,6 +61,9 @@ type
     Label7: TLabel;
     Timer1: TTimer;
     Label8: TLabel;
+    SaveDialog1: TSaveDialog;
+    MenuItem2: TMenuItem;
+    MenuItem3: TMenuItem;
     procedure Viewport3DMainMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Single);
     procedure Viewport3DMainMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -84,6 +87,7 @@ type
     procedure ComboBox1Change(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure MenuItem3Click(Sender: TObject);
   private
     FDown: TPointF;
     FMouseS : TShiftState;
@@ -100,7 +104,7 @@ var
 
 implementation
 
-uses FMX.DialogService;
+uses FMX.DialogService, Unit2;
 
 {$R *.fmx}
 
@@ -312,6 +316,12 @@ begin
 {$ENDIF}
 end;
 
+
+procedure TForm1.MenuItem3Click(Sender: TObject);
+begin
+  Form2.Show;
+end;
+
 procedure TForm1.OpenClick(Sender: TObject);
 var
   m : TMoveable;
@@ -322,11 +332,15 @@ begin
   if OpenDialog1.Execute then
   begin
     if (not FileExists(OpenDialog1.FileName)) then Exit;
-    if LowerCase(ExtractFileExt(OpenDialog1.FileName)) <> '.wad2' then Exit;
+    if LowerCase(ExtractFileExt(OpenDialog1.FileName)) <> '.wad2' then
+    begin
+      TDialogService.MessageDialog('Not a .wad2 file.',TMsgDlgType.mtError,[TMsgDlgBtn.mbOK],TMsgDlgBtn.mbOK,0,nil);
+      Exit;
+    end;
     memstream.LoadFromFile(OpenDialog1.FileName);
     if not LoadWad2(memstream, w) then
     begin
-      TDialogService.MessageDialog('Unable to load file',TMsgDlgType.mtError,[TMsgDlgBtn.mbOK],TMsgDlgBtn.mbOK,0,nil);
+      TDialogService.MessageDialog('Unable to load file.',TMsgDlgType.mtError,[TMsgDlgBtn.mbOK],TMsgDlgBtn.mbOK,0,nil);
       memstream.Free;
       FreeWad(w);
       Caption := FORMCAPTION;
@@ -381,7 +395,17 @@ begin
     memstream.SaveToFile('C:/Users/Username/Documents/swapwad.wad2');
     ShowMessage('Saved');
   end;
+  Exit;
 {$ENDIF}
+  if not (w.moveables.Count > 0) then Exit;
+  SaveDialog1.Filter := 'WadTool Files (*.wad2)|*.wad2|All Files (*.*)|*.*';
+  if SaveDialog1.Execute then
+  begin
+    ChangeFileExt(SaveDialog1.FileName,'.wad2');
+    memstream.SaveToFile(SaveDialog1.FileName);
+    ShowMessage('Saved "'+ExtractFileName(SaveDialog1.FileName)+'"');
+    Caption := FORMCAPTION + ' - ' + SaveDialog1.FileName;
+  end;
 end;
 
 procedure TForm1.SwapVerts(v1, v2: Integer);
@@ -395,7 +419,6 @@ var
   po, po2 : TProxyObject;
   src : TControl3D;
   bw : TBinaryWriter;
-  byteCount : Integer;
 begin
   if v1 = v2 then Exit;
   bw := TBinaryWriter.Create(memstream);
@@ -585,6 +608,7 @@ var
   i : Integer;
 begin
   node := TreeView1.Selected;
+  if not Assigned(node) then Exit; // avoid access violation
   if (node.Level = 1) then
   begin
     if (node.Count > 0) then
@@ -622,7 +646,7 @@ begin
   DummyVerts.Visible := True;
   CreatePoints(msh, DummyVerts, MaterialSourceY, MaterialSourceX, DummyVertsMouseDown);
   FSelectedVert := -1;
-  Label4.Text := '#'+ msh.vertlimit.ToString + ' max.';
+  Label4.Text := '#'+ msh.vertlimit.ToString + ' limit';
   ComboBox1.Items.Clear;
   ComboBox2.Items.Clear;
   Label1.Text := '';

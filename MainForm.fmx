@@ -335,6 +335,14 @@ object Form1: TForm1
         ImageIndex = 43
       end
     end
+    object MenuItem2: TMenuItem
+      Text = '&Help'
+      object MenuItem3: TMenuItem
+        Locked = True
+        Text = 'Instructions'
+        OnClick = MenuItem3Click
+      end
+    end
   end
   object OpenDialog1: TOpenDialog
     DefaultExt = '.wad2'
@@ -473,6 +481,12 @@ object Form1: TForm1
     OnTimer = Timer1Timer
     Left = 152
     Top = 208
+  end
+  object SaveDialog1: TSaveDialog
+    DefaultExt = 'wad2'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
+    Left = 355
+    Top = 40
   end
   object ActionList1: TActionList
     Left = 256
