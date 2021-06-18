@@ -24,7 +24,7 @@ type
 
   TWadMesh = record
     verts : TList<TVert>;
-    normals : TList<TPoint3D>;
+    {normals : TList<TPoint3D>;}
     quads : TList<TPoly>;
     tris  : TList<TPoly>;
     name : string;
@@ -139,7 +139,7 @@ begin
             if ss = 'W2Mesh' then
             begin
               msh.verts := TList<TVert>.Create;
-              msh.normals := TList<TPoint3D>.Create;
+              {msh.normals := TList<TPoint3D>.Create;}
               msh.quads := TList<TPoly>.Create;
               msh.tris := TList<TPoly>.Create;
               msh.name := 'Mesh';
@@ -157,7 +157,7 @@ begin
                   msh.name := GetChunkId(br, chunkSize4);
                 end
                 else
-                if (ss = 'W2VrtPos') or (ss = 'W2VrtNorm') or (ss = 'W2Polys') then
+                if (ss = 'W2VrtPos') {or (ss = 'W2VrtNorm')} or (ss = 'W2Polys') then
                 begin
                   if ss = 'W2Polys' then msh.polysAddress := stream.Position;
                   if ss = 'W2Polys' then msh.polysChunkSize := chunkSize4;
@@ -177,7 +177,7 @@ begin
                       br.ReadSingle);
                       vert.coords := v;
                       msh.verts.Add(vert);
-                    end
+                    end {
                     else if ss = 'W2N' then
                     begin
                       n := TPoint3D.Create(
@@ -185,7 +185,7 @@ begin
                       br.ReadSingle,
                       br.ReadSingle);
                       msh.normals.Add(n);
-                    end
+                    end}
                     else if (ss = 'W2Tr') or (ss = 'W2Uq') then
                     begin
                       poly.p1 := LEB128.ReadInt(br);
@@ -426,7 +426,7 @@ begin
       for msh in m.meshes do
       begin
         msh.verts.Free;
-        msh.normals.Free;
+        {msh.normals.Free;}
         if Assigned(msh.quads) then msh.quads.Free;
         if Assigned(msh.tris)  then msh.tris.Free;
       end;
@@ -449,7 +449,8 @@ var
   mov : TMoveable;
   movsAddress, movAddress : Int64;
   movsChunkSize, movChunkSize : Int64;
-  i, j : Integer;
+  i, j, k : Integer;
+  v : TVert;
 begin
   stream := TMemoryStream.Create;
   bw := TBinaryWriter.Create(stream);
@@ -558,6 +559,12 @@ begin
       msh := mov.meshes[j];
       msh.sizeAddress := msh.sizeAddress + byteCount;
       msh.polysAddress := msh.polysAddress + byteCount;
+      for k := 0 to msh.verts.Count-1 do
+      begin
+        v := msh.verts[k];
+        v.address := v.address + byteCount;
+        msh.verts[k] := v;
+      end;
       mov.meshes[j] := msh;
     end;
     w.moveables[movIdx] := mov;
@@ -570,6 +577,12 @@ begin
         msh := mov.meshes[j];
         msh.sizeAddress := msh.sizeAddress + byteCount;
         msh.polysAddress := msh.polysAddress + byteCount;
+        for k := 0 to msh.verts.Count-1 do
+        begin
+          v := msh.verts[k];
+          v.address := v.address + byteCount;
+          msh.verts[k] := v;
+        end;
         mov.meshes[j] := msh;
       end;
       w.moveables[i] := mov;
