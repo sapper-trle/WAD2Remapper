@@ -471,7 +471,10 @@ object Form1: TForm1
     Size.Height = 73.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {00070000000000000004000000}
-    Text = 'Always have a backup copy of your wad2.'
+    TextSettings.VertAlign = Leading
+    Text = 
+      'Always have a backup copy of your wad2 in case this program corr' +
+      'upts your wad2.'
     TabOrder = 31
     TabStop = False
   end
