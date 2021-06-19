@@ -299,7 +299,7 @@ begin
   for vert in msh.verts do
   begin
     v := vert.coords;
-    verts[i].x := v.X * scale;     //rotate about axis
+    verts[i].x :=  -v.X * scale;     // match strpix opengl system
     verts[i].y := -v.Y * scale;
     verts[i].z := -v.Z * scale;
     Inc(i);
@@ -308,19 +308,19 @@ begin
   i := 0;
   for t in msh.tris do
   begin
-    tris[i]   := t.p3;  // reverse winding
+    tris[i]   := t.p1;
     tris[i+1] := t.p2;
-    tris[i+2] := t.p1;
+    tris[i+2] := t.p3;
     Inc(i, 3);
   end;
   for t in msh.quads do
   begin
-    tris[i]   := t.p3;     // reverse winding
+    tris[i]   := t.p1;
     tris[i+1] := t.p2;
-    tris[i+2] := t.p1;
-    tris[i+3] := t.p1;
+    tris[i+2] := t.p3;
+    tris[i+3] := t.p3;
     tris[i+4] := t.p4;
-    tris[i+5] := t.p3;
+    tris[i+5] := t.p1;
     Inc(i, 6);
   end;
   Result.Data.AssignFromMeshVertex(verts, tris);
@@ -343,7 +343,7 @@ begin
   for vert in msh.verts do
   begin
     v := vert.coords;
-    Result.VertexBuffer.Vertices[i] := TPoint3D.Create(v.X * scale, -v.Y * scale, -v.Z * scale);
+    Result.VertexBuffer.Vertices[i] := TPoint3D.Create(-v.X * scale, -v.Y * scale, -v.Z * scale);
     Inc(i);
   end;
   Result.IndexBuffer.Create(msh.tris.Count * 6 + msh.quads.Count * 8, TIndexFormat.UInt32);
@@ -406,7 +406,7 @@ begin
     s.Tag := i;
     s.HitTest := True;
     s.SetSize(size, size, size);
-    s.Position.X :=  v.X * scale;     //rotate about axis
+    s.Position.X :=  -v.X * scale;     // match strpix view opengl
     s.Position.Y := -v.Y * scale;
     s.Position.Z := -v.Z * scale;
     s.OnMouseDown := e;
