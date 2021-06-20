@@ -19,7 +19,7 @@ Delphi 10 Community Edition is currently available for free.
 https://www.embarcadero.com/products/delphi/starter
 
 ## Download
-https://github.com/sapper-trle/WAD2Remapper/releases/latest
+https://github.com/sapper-trle/WAD2Remapper/releases/latest Windows 64 bit
 
 ## Usage:
 
