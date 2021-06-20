@@ -18,9 +18,9 @@ This is a Delphi 10.3.3 Firemonkey (FMX) 3D project.
 Delphi 10 Community Edition is currently available for free.
 https://www.embarcadero.com/products/delphi/starter
 
-# Usage:
+## Usage:
 
-## WARNING: Use this program only on a copy of your wad2. The wad2 file format is easily corrupted.
+### WARNING: Use this program only on a copy of your wad2. The wad2 file format is easily corrupted.
 
 Open your wad2.
 
@@ -39,7 +39,7 @@ There are two ways to swap vertices.
 
 Save the wad2.
 
-# 3D Viewport Controls.
+## 3D Viewport Controls.
 
 Left mouse button - Select vertex
 
