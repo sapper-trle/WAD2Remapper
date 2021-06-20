@@ -18,6 +18,9 @@ This is a Delphi 10.3.3 Firemonkey (FMX) 3D project.
 Delphi 10 Community Edition is currently available for free.
 https://www.embarcadero.com/products/delphi/starter
 
+## Download
+https://github.com/sapper-trle/WAD2Remapper/releases/latest
+
 ## Usage:
 
 ### WARNING: Use this program only on a copy of your wad2. The wad2 file format is easily corrupted.
