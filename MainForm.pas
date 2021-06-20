@@ -193,13 +193,13 @@ begin
   if (ssLeft in Shift)  and (ssCtrl in Shift) and (FSelectedVert > -1)then
   begin
     SwapVerts(FSelectedVert, p.Tag);
-    Label2.Text := Format('x: %.0f y: %.0f z: %.0f',[p.Position.X*scale, -p.Position.Y*scale, -p.Position.Z*scale]);
+    Label2.Text := Format('x: %.0f y: %.0f z: %.0f',[-p.Position.X*scale, -p.Position.Y*scale, -p.Position.Z*scale]);
   end
   else
   if ssLeft in Shift then
   begin
     Label1.Text := '#' + p.Tag.ToString + ' selected';
-    Label2.Text := Format('x: %.0f y: %.0f z: %.0f',[p.Position.X*scale, -p.Position.Y*scale, -p.Position.Z*scale]);
+    Label2.Text := Format('x: %.0f y: %.0f z: %.0f',[-p.Position.X*scale, -p.Position.Y*scale, -p.Position.Z*scale]);
     FSelectedVert := p.Tag;
     ComboBox1.ItemIndex := FSelectedVert;
   end;
